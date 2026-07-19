@@ -1,4 +1,4 @@
--- Eityum Hub - No External Library
+-- Eityum Hub - Universal Script Hub
 local player = game:GetService("Players").LocalPlayer
 local UIS = game:GetService("UserInputService")
 
@@ -85,6 +85,10 @@ addButton("Cobra", function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/eityum/yeayeayeyaeyayeayeyayeayeyaey/main/scripts/Cobra.lua"))()
 end)
 
+addButton("Wiggly Stick", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/eityum/yeayeayeyaeyayeayeyayeayeyaey/main/scripts/Stick.lua"))()
+end)
+
 addButton("Text Blocks", function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/eityum/yeayeayeyaeyayeayeyayeayeyaey/main/scripts/TextManipulate.lua"))()
 end)
@@ -119,7 +123,7 @@ y = y + 28
 local credits = {
     {name = "Eityum", desc = "Creator & Developer", color = Color3.fromRGB(255, 200, 50)},
     {name = "Claude", desc = "Smiley Hub Original", color = Color3.fromRGB(200, 150, 255)},
-    {name = "DeepSeek", desc = "Mech, Cobra, Text Blocks", color = Color3.fromRGB(100, 200, 255)},
+    {name = "DeepSeek", desc = "Mech, Cobra, Text Blocks, Stick", color = Color3.fromRGB(100, 200, 255)},
     {name = "EdgeIY", desc = "Infinite Yield", color = Color3.fromRGB(255, 100, 100)},
 }
 
