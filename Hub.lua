@@ -1,5 +1,5 @@
 -- Eityum Hub - Universal Script Hub
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Robojini/Tuturial_UI_Library/main/UI_Template_1"))()
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Robojini/Tuturial_UI_Library/main/UI_Template_1.lua"))()
 local MainWindow = Library.CreateLib("Eityum Hub", "RJTheme4")
 
 local ScriptsTab = MainWindow:NewTab("Scripts")
@@ -29,9 +29,17 @@ ScriptsSection:NewButton("SmileyHub", "Original hub by Claude", function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/eityum/yeayeayeyaeyayeayeyayeayeyaey/main/scripts/SmileyHub.lua"))()
 end)
 
+local HubsTab = MainWindow:NewTab("Hubs")
+local HubsSection = HubsTab:NewSection("External Hubs")
+
+HubsSection:NewButton("Infinite Yield", "Admin commands hub", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+end)
+
 local CreditsTab = MainWindow:NewTab("Credits")
 local MadeBy = CreditsTab:NewSection("Created by Eityum")
 local ThanksTo = CreditsTab:NewSection("Thanks to")
 ThanksTo:NewLabel("Claude - Smiley Hub")
 ThanksTo:NewLabel("DeepSeek - Mech, Cobra, Text Blocks")
 ThanksTo:NewLabel("Robojini - UI Library")
+ThanksTo:NewLabel("EdgeIY - Infinite Yield")
