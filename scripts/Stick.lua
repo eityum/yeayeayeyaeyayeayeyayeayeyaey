@@ -1,4 +1,4 @@
--- Wiggly Stick Controller - Clean Version (No Snake)
+-- Wiggly Stick Controller - Mobile Drag
 local UIS = game:GetService("UserInputService")
 local RS = game:GetService("RunService")
 local WS = game:GetService("Workspace")
@@ -58,9 +58,23 @@ local tb = btn("SUPER STICK (drag)", 0, 0, 280, 26, Color3.fromRGB(25, 25, 25))
 tb.AutoButtonColor = false; tb.TextColor3 = Color3.fromRGB(255, 200, 100); tb.TextSize = 12
 
 local drag, dStart, sPos = false, nil, nil
-tb.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then drag = true; dStart = i.Position; sPos = mf.Position end end)
-UIS.InputChanged:Connect(function(i) if drag and i.UserInputType == Enum.UserInputType.MouseMovement then local d = i.Position - dStart; mf.Position = UDim2.new(sPos.X.Scale, sPos.X.Offset + d.X, sPos.Y.Scale, sPos.Y.Offset + d.Y) end end)
-UIS.InputEnded:Connect(function(i) drag = false end)
+tb.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+        drag = true; dStart = i.Position; sPos = mf.Position
+    end
+end)
+UIS.InputChanged:Connect(function(i)
+    if not drag then return end
+    if i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch then
+        local d = i.Position - dStart
+        mf.Position = UDim2.new(sPos.X.Scale, sPos.X.Offset + d.X, sPos.Y.Scale, sPos.Y.Offset + d.Y)
+    end
+end)
+UIS.InputEnded:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+        drag = false
+    end
+end)
 
 local stat = label("Off", 0, 410, 280, 18)
 stat.TextColor3 = Color3.fromRGB(180, 180, 180); stat.TextSize = 11
