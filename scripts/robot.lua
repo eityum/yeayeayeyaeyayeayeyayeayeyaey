@@ -1,4 +1,4 @@
--- Mech Controller - Move/Turn Buttons + Emotes (Hi/Dance/Sit/Offer) + Straight + Keyboard + Spawner
+-- Mech Controller - Mobile Drag + Move/Turn + Emotes + Straight + Keyboard + Spawner
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
