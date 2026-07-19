@@ -1,5 +1,5 @@
 -- Eityum Hub - Universal Script Hub
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Robojini/Tuturial_UI_Library/main/UI_Template_1"))()
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Robojini/Tuturial_UI_Library/main/UI_Template_1.lua"))()
 local MainWindow = Library.CreateLib("Eityum Hub", "RJTheme4")
 
 local ScriptsTab = MainWindow:NewTab("Scripts")
