@@ -1,9 +1,8 @@
--- Cobra Controller - Fixed Kill + Wiggle 45 + W/S Swapped
+-- Cobra Controller - Mobile Drag + Mech Style + Move/Turn + Keyboard + Kill
 local UIS,RS,WS,PS=game:GetService("UserInputService"),game:GetService("RunService"),game:GetService("Workspace"),game:GetService("Players")
 local LPlayer,char=PS.LocalPlayer,PS.LocalPlayer.Character or PS.LocalPlayer.CharacterAdded:Wait()
 local hum,root=char:WaitForChild("Humanoid"),char:WaitForChild("HumanoidRootPart")
 local HttpService=game:GetService("HttpService")
-local Mouse=LPlayer:GetMouse()
 
 local LPlate,Active
 for i,v in pairs(WS.Plates:GetChildren())do
@@ -67,13 +66,20 @@ end
 
 local tb=btn("COBRA (drag)",0,0,250,28,Color3.fromRGB(25,25,25),mf)
 tb.AutoButtonColor=false;tb.TextColor3=Color3.fromRGB(100,255,100)
+
+-- Mobile drag
 local drag,dStart,sPos=false,nil,nil
 tb.InputBegan:Connect(function(i)
-    if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then drag=true;dStart=i.Position;sPos=mf.Position end
+    if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
+        drag=true;dStart=i.Position;sPos=mf.Position
+    end
 end)
 UIS.InputChanged:Connect(function(i)
     if not drag then return end
-    if i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch then local d=i.Position-dStart;mf.Position=UDim2.new(sPos.X.Scale,sPos.X.Offset+d.X,sPos.Y.Scale,sPos.Y.Offset+d.Y)end
+    if i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch then
+        local d=i.Position-dStart
+        mf.Position=UDim2.new(sPos.X.Scale,sPos.X.Offset+d.X,sPos.Y.Scale,sPos.Y.Offset+d.Y)
+    end
 end)
 UIS.InputEnded:Connect(function(i)
     if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then drag=false end
@@ -92,12 +98,9 @@ local function dirBtn(t,x,y,c,dir)
     b.MouseButton1Up:Connect(function()dirs[dir]=0;b.BackgroundColor3=c end)
     b.MouseLeave:Connect(function()dirs[dir]=0;b.BackgroundColor3=c end)
 end
-dirBtn("W",105,100,Color3.fromRGB(255,200,50),"Backward")
-dirBtn("S",105,134,Color3.fromRGB(255,200,50),"Forward")
-dirBtn("A",60,117,Color3.fromRGB(255,100,100),"Left")
-dirBtn("D",150,117,Color3.fromRGB(255,100,100),"Right")
-dirBtn("Q",195,100,Color3.fromRGB(100,200,255),"Up")
-dirBtn("E",195,134,Color3.fromRGB(100,200,255),"Down")
+dirBtn("W",105,100,Color3.fromRGB(255,200,50),"Forward");dirBtn("S",105,134,Color3.fromRGB(255,200,50),"Backward")
+dirBtn("A",60,117,Color3.fromRGB(255,100,100),"Left");dirBtn("D",150,117,Color3.fromRGB(255,100,100),"Right")
+dirBtn("Q",195,100,Color3.fromRGB(100,200,255),"Up");dirBtn("E",195,134,Color3.fromRGB(100,200,255),"Down")
 
 local function rotBtn(t,x,y,setter)
     local b=btn(t,x,y,40,30,Color3.fromRGB(200,150,255))
@@ -131,7 +134,7 @@ kbdBtn.MouseButton1Click:Connect(function()
     end
 end)
 
-local keyMap={[Enum.KeyCode.W]={"Backward",1},[Enum.KeyCode.S]={"Forward",1},[Enum.KeyCode.A]={"Left",1},[Enum.KeyCode.D]={"Right",1},[Enum.KeyCode.Q]={"Up",1},[Enum.KeyCode.E]={"Down",1}}
+local keyMap={[Enum.KeyCode.W]={"Forward",1},[Enum.KeyCode.S]={"Backward",1},[Enum.KeyCode.A]={"Left",1},[Enum.KeyCode.D]={"Right",1},[Enum.KeyCode.Q]={"Up",1},[Enum.KeyCode.E]={"Down",1}}
 local keyTog={[Enum.KeyCode.Z]=function()rotL=true end,[Enum.KeyCode.X]=function()rotR=true end}
 local keyTogOff={[Enum.KeyCode.Z]=function()rotL=false end,[Enum.KeyCode.X]=function()rotR=false end}
 UIS.InputBegan:Connect(function(i,p)if p or not kbd then return end
@@ -145,22 +148,25 @@ end)
 
 local function getTargetPlayer()
     local headPos=cf:PointToWorldSpace(Vector3.new(0,16,60))
-    local best=nil
+    local best,bestDist=nil,25
     for _,pl in pairs(PS:GetPlayers())do
         if pl~=LPlayer and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart")then
             local hrp=pl.Character.HumanoidRootPart
             local dist=(hrp.Position-headPos).Magnitude
-            if dist<25 then best=pl end
+            local dot=cf.LookVector:Dot((hrp.Position-headPos).Unit)
+            if dist<bestDist and dot>0.3 then best,bestDist=pl,dist end
         end
     end
     return best
 end
 
 local function killPlayer(pl)
-    if not pl then return end
-    if pl:IsA("Player")then pl=pl.Character and pl.Character.PrimaryPart end
-    if not pl then return end
-    StampAsset:InvokeServer(41324885,LPlate.CFrame-Vector3.new(0,9e9,0),"{99ab22df-ca29-4143-a2fd-0a1b79db78c2}",{pl},0)
+    if not pl or not pl.Character then return end
+    local hrp=pl.Character:FindFirstChild("HumanoidRootPart")
+    local humanoid=pl.Character:FindFirstChildOfClass("Humanoid")
+    if not hrp or not humanoid or humanoid.Health==0 then return end
+    local block=PlaceBlock(Ids.Black,LPlate.CFrame+Vector3.new(0,150,0),{hrp,WS.Water.Water,LPlate})
+    task.delay(0.2,function()pcall(function()DeleteAsset:InvokeServer(block)end)end)
 end
 
 UIS.InputBegan:Connect(function(i,p)
