@@ -1,4 +1,4 @@
--- Eityum Hub - Universal Script Hub
+-- Eityum Hub - Universal Script Hub (Mobile Friendly)
 local player = game:GetService("Players").LocalPlayer
 local UIS = game:GetService("UserInputService")
 
@@ -7,8 +7,8 @@ sg.Name = "EityumHub"
 sg.ResetOnSpawn = false
 
 local frame = Instance.new("Frame", sg)
-frame.Size = UDim2.new(0, 200, 0, 380)
-frame.Position = UDim2.new(0, 10, 0.5, -190)
+frame.Size = UDim2.new(0, 200, 0, 420)
+frame.Position = UDim2.new(0, 10, 0.5, -210)
 frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 frame.BorderSizePixel = 0
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
@@ -35,21 +35,23 @@ closeBtn.BorderSizePixel = 0
 Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 4)
 closeBtn.MouseButton1Click:Connect(function() sg:Destroy() end)
 
--- Drag
+-- Mobile drag
 local drag, dStart, sPos = false, nil, nil
 title.InputBegan:Connect(function(i)
-    if i.UserInputType == Enum.UserInputType.MouseButton1 then
+    if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
         drag = true; dStart = i.Position; sPos = frame.Position
     end
 end)
 UIS.InputChanged:Connect(function(i)
     if not drag then return end
-    if i.UserInputType == Enum.UserInputType.MouseMovement then
+    if i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch then
         local d = i.Position - dStart
         frame.Position = UDim2.new(sPos.X.Scale, sPos.X.Offset + d.X, sPos.Y.Scale, sPos.Y.Offset + d.Y)
     end
 end)
-UIS.InputEnded:Connect(function(i) drag = false end)
+UIS.InputEnded:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then drag = false end
+end)
 
 -- Scripts label
 local scriptsLabel = Instance.new("TextLabel", frame)
@@ -89,6 +91,10 @@ addButton("Wiggly Stick", function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/eityum/yeayeayeyaeyayeayeyayeayeyaey/main/scripts/Stick.lua"))()
 end)
 
+addButton("Tornado", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/eityum/yeayeayeyaeyayeayeyayeayeyaey/main/scripts/Tornado.lua"))()
+end)
+
 addButton("Text Blocks", function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/eityum/yeayeayeyaeyayeayeyayeayeyaey/main/scripts/TextManipulate.lua"))()
 end)
@@ -123,7 +129,7 @@ y = y + 28
 local credits = {
     {name = "Eityum", desc = "Creator & Developer", color = Color3.fromRGB(255, 200, 50)},
     {name = "Claude", desc = "Smiley Hub Original", color = Color3.fromRGB(200, 150, 255)},
-    {name = "DeepSeek", desc = "Mech, Cobra, Text Blocks, Stick", color = Color3.fromRGB(100, 200, 255)},
+    {name = "DeepSeek", desc = "Mech, Cobra, Stick, Tornado", color = Color3.fromRGB(100, 200, 255)},
     {name = "EdgeIY", desc = "Infinite Yield", color = Color3.fromRGB(255, 100, 100)},
 }
 
