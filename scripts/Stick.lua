@@ -1,4 +1,4 @@
--- Wiggly Stick Controller - Mobile Drag
+-- Wiggly Stick Controller - Spacing Setting (10x scale)
 local UIS = game:GetService("UserInputService")
 local RS = game:GetService("RunService")
 local WS = game:GetService("Workspace")
@@ -16,15 +16,18 @@ local kbd, velConn = false, nil
 local wobbliness = 5
 local curliness = 0
 local stickLength = 200
+local spacing = 40
 local targetPlayer = nil
 local trackMode = false
 
 local mo = {}
 local function rebuildMo()
     mo = {}
-    for seg = 0, stickLength - 1 do
-        local z = seg * 4
-        table.insert(mo, {pos = Vector3.new(0, 0, -z), tag = "body"})
+    local actualSpacing = spacing / 10
+    local pos = 0
+    while pos < stickLength * actualSpacing do
+        table.insert(mo, {pos = Vector3.new(0, 0, -pos), tag = "body"})
+        pos = pos + actualSpacing
     end
 end
 rebuildMo()
@@ -35,8 +38,8 @@ sg.ResetOnSpawn = false
 sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local mf = Instance.new("Frame", sg)
-mf.Size = UDim2.new(0, 280, 0, 440)
-mf.Position = UDim2.new(0.5, -140, 0.5, -220)
+mf.Size = UDim2.new(0, 280, 0, 470)
+mf.Position = UDim2.new(0.5, -140, 0.5, -235)
 mf.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 mf.BorderSizePixel = 0
 Instance.new("UICorner", mf).CornerRadius = UDim.new(0, 10)
@@ -71,12 +74,10 @@ UIS.InputChanged:Connect(function(i)
     end
 end)
 UIS.InputEnded:Connect(function(i)
-    if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
-        drag = false
-    end
+    if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then drag = false end
 end)
 
-local stat = label("Off", 0, 410, 280, 18)
+local stat = label("Off", 0, 440, 280, 18)
 stat.TextColor3 = Color3.fromRGB(180, 180, 180); stat.TextSize = 11
 
 btn("BUILD STICK", 10, 32, 125, 28, Color3.fromRGB(50, 200, 50)).MouseButton1Click:Connect(function()
@@ -130,7 +131,8 @@ kbdBtn.MouseButton1Click:Connect(function()
     if kbd then kbdBtn.Text = "KEYBOARD: ON (WASD/QE/ZX)"; kbdBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
     else kbdBtn.Text = "KEYBOARD: OFF"; kbdBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
         if velConn then velConn:Disconnect() end
-        local et = tick() + 5; velConn = RS.Heartbeat:Connect(function() if tick() >= et then velConn:Disconnect() return end; root.Velocity = Vector3.zero; root.RotVelocity = Vector3.zero end)
+        local et = tick() + 5
+        velConn = RS.Heartbeat:Connect(function() if tick() >= et then velConn:Disconnect() return end; root.Velocity = Vector3.zero; root.RotVelocity = Vector3.zero end)
     end
 end)
 
@@ -141,8 +143,8 @@ local function dirBtn(t, x, y, c, dir)
     b.MouseButton1Up:Connect(function() dirs[dir] = 0 end)
     b.MouseLeave:Connect(function() dirs[dir] = 0 end)
 end
-dirBtn("W", 110, 100, Color3.fromRGB(255, 200, 50), "Forward")
-dirBtn("S", 110, 132, Color3.fromRGB(255, 200, 50), "Backward")
+dirBtn("W", 110, 100, Color3.fromRGB(255, 200, 50), "Backward")
+dirBtn("S", 110, 132, Color3.fromRGB(255, 200, 50), "Forward")
 dirBtn("A", 65, 116, Color3.fromRGB(255, 100, 100), "Left")
 dirBtn("D", 155, 116, Color3.fromRGB(255, 100, 100), "Right")
 dirBtn("E", 200, 100, Color3.fromRGB(100, 200, 255), "Up")
@@ -231,26 +233,36 @@ btn("SET C", 155, 346, 50, 22, Color3.fromRGB(255, 100, 200)).MouseButton1Click:
     local n = tonumber(curlBox.Text); if n then curliness = n; curlLabel.Text = "Curliness: " .. n end
 end)
 
-local lLabel = label("Length: 200", 10, 376, 140, 18)
+local dLabel = label("Spacing: 40", 10, 376, 140, 18)
+local dBox = Instance.new("TextBox", mf)
+dBox.Size = UDim2.new(0, 50, 0, 20); dBox.Position = UDim2.new(0, 100, 0, 375)
+dBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40); dBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+dBox.Text = "40"; dBox.Font = Enum.Font.Gotham; dBox.TextSize = 10; dBox.BorderSizePixel = 0
+Instance.new("UICorner", dBox).CornerRadius = UDim.new(0, 4)
+btn("SET S", 155, 374, 50, 22, Color3.fromRGB(255, 150, 50)).MouseButton1Click:Connect(function()
+    local n = tonumber(dBox.Text); if n and n > 0 then spacing = n; dLabel.Text = "Spacing: " .. n end
+end)
+
+local lLabel = label("Length: 200", 10, 404, 140, 18)
 local lBox = Instance.new("TextBox", mf)
-lBox.Size = UDim2.new(0, 50, 0, 20); lBox.Position = UDim2.new(0, 100, 0, 375)
+lBox.Size = UDim2.new(0, 50, 0, 20); lBox.Position = UDim2.new(0, 100, 0, 403)
 lBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40); lBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 lBox.Text = "200"; lBox.Font = Enum.Font.Gotham; lBox.TextSize = 10; lBox.BorderSizePixel = 0
 Instance.new("UICorner", lBox).CornerRadius = UDim.new(0, 4)
-btn("SET L", 155, 374, 50, 22, Color3.fromRGB(255, 200, 50)).MouseButton1Click:Connect(function()
+btn("SET L", 155, 402, 50, 22, Color3.fromRGB(255, 200, 50)).MouseButton1Click:Connect(function()
     local n = tonumber(lBox.Text); if n and n > 0 then stickLength = n; lLabel.Text = "Length: " .. n end
 end)
 
 UIS.InputBegan:Connect(function(i, p)
     if p or not kbd then return end
-    if i.KeyCode == Enum.KeyCode.W then dirs.Forward = 1 elseif i.KeyCode == Enum.KeyCode.S then dirs.Backward = 1
+    if i.KeyCode == Enum.KeyCode.W then dirs.Backward = 1 elseif i.KeyCode == Enum.KeyCode.S then dirs.Forward = 1
     elseif i.KeyCode == Enum.KeyCode.A then dirs.Left = 1 elseif i.KeyCode == Enum.KeyCode.D then dirs.Right = 1
     elseif i.KeyCode == Enum.KeyCode.E then dirs.Up = 1 elseif i.KeyCode == Enum.KeyCode.Q then dirs.Down = 1
     elseif i.KeyCode == Enum.KeyCode.Z then rotL = true elseif i.KeyCode == Enum.KeyCode.X then rotR = true end
 end)
 UIS.InputEnded:Connect(function(i, p)
     if p or not kbd then return end
-    if i.KeyCode == Enum.KeyCode.W then dirs.Forward = 0 elseif i.KeyCode == Enum.KeyCode.S then dirs.Backward = 0
+    if i.KeyCode == Enum.KeyCode.W then dirs.Backward = 0 elseif i.KeyCode == Enum.KeyCode.S then dirs.Forward = 0
     elseif i.KeyCode == Enum.KeyCode.A then dirs.Left = 0 elseif i.KeyCode == Enum.KeyCode.D then dirs.Right = 0
     elseif i.KeyCode == Enum.KeyCode.E then dirs.Up = 0 elseif i.KeyCode == Enum.KeyCode.Q then dirs.Down = 0
     elseif i.KeyCode == Enum.KeyCode.Z then rotL = false elseif i.KeyCode == Enum.KeyCode.X then rotR = false end
