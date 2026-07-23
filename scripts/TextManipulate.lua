@@ -1,4 +1,4 @@
--- Text Block Manipulator - Bigger GUI, Bright Buttons, All Direction Buttons
+-- Text Block Manipulator - Infinite Characters + URL Symbols
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
@@ -18,8 +18,8 @@ local textOffsetY = 3
 local textOffsetZ = -40
 local allOffsets = {}
 local increment = 1
+local maxBlocks = 9999
 
--- 5x5 font
 local font = {
 	A = {"  X  "," X X ","XXXXX","X   X","X   X"},
 	B = {"XXXX ","X   X","XXXX ","X   X","XXXX "},
@@ -48,6 +48,45 @@ local font = {
 	Y = {"X   X"," X X ","  X  ","  X  ","  X  "},
 	Z = {"XXXXX","   X ","  X  "," X   ","XXXXX"},
 	[" "] = {"     ","     ","     ","     ","     "},
+	["0"] = {" XXX ","X   X","X  XX","X   X"," XXX "},
+	["1"] = {"  X  "," XX  ","  X  ","  X  ","XXXXX"},
+	["2"] = {" XXX ","X   X","  XX "," X   ","XXXXX"},
+	["3"] = {"XXXXX","    X"," XXXX","    X","XXXXX"},
+	["4"] = {"X   X","X   X","XXXXX","    X","    X"},
+	["5"] = {"XXXXX","X    ","XXXX ","    X","XXXX "},
+	["6"] = {" XXXX","X    ","XXXX ","X   X"," XXX "},
+	["7"] = {"XXXXX","    X","   X ","  X  "," X   "},
+	["8"] = {" XXX ","X   X"," XXX ","X   X"," XXX "},
+	["9"] = {" XXX ","X   X"," XXXX","    X"," XXX "},
+	["!"] = {"  X  ","  X  ","  X  ","     ","  X  "},
+	["?"] = {" XXX ","X   X","  XX ","     ","  X  "},
+	["."] = {"     ","     ","     ","     ","  X  "},
+	[":"] = {"     ","  X  ","     ","  X  ","     "},
+	["/"] = {"    X","   X ","  X  "," X   ","X    "},
+	["@"] = {" XXX ","X   X","X X X","X    "," XXXX"},
+	["-"] = {"     ","     ","XXXXX","     ","     "},
+	["_"] = {"     ","     ","     ","     ","XXXXX"},
+	["#"] = {" X X ","XXXXX"," X X ","XXXXX"," X X "},
+	["="] = {"     ","XXXXX","     ","XXXXX","     "},
+	["+"] = {"     ","  X  ","XXXXX","  X  ","     "},
+	["*"] = {" X X ","  X  ","XXXXX","  X  "," X X "},
+	["("] = {"  X  "," X   ","X    "," X   ","  X  "},
+	[")"] = {"  X  ","   X ","    X","   X ","  X  "},
+	["'"] = {"  X  ","  X  ","     ","     ","     "},
+	['"'] = {" X X "," X X ","     ","     ","     "},
+	[","] = {"     ","     ","     ","  X  "," X   "},
+	[";"] = {"     ","  X  ","     ","  X  "," X   "},
+	["<"] = {"   X ","  X  "," X   ","  X  ","   X "},
+	[">"] = {" X   ","  X  ","   X ","  X  "," X   "},
+	["["] = {" XXX "," X   "," X   "," X   "," XXX "},
+	["]"] = {" XXX ","   X ","   X ","   X "," XXX "},
+	["{"] = {"  XX "," X   ","XX   "," X   ","  XX "},
+	["}"] = {"XX   ","  X  ","  XX ","  X  ","XX   "},
+	["|"] = {"  X  ","  X  ","  X  ","  X  ","  X  "},
+	["\\"] = {"X    "," X   ","  X  ","   X ","    X"},
+	["^"] = {"  X  "," X X ","X   X","     ","     "},
+	["`"] = {" X   ","  X  ","     ","     ","     "},
+	["~"] = {"     "," X X ","X X X","     ","     "},
 	["А"] = {"  X  "," X X ","XXXXX","X   X","X   X"},
 	["Б"] = {"XXXXX","X    ","XXXX ","X   X","XXXX "},
 	["В"] = {"XXXX ","X   X","XXXX ","X   X","XXXX "},
@@ -102,7 +141,7 @@ local titleBar = Instance.new("TextButton")
 titleBar.Size = UDim2.new(1, 0, 0, 30)
 titleBar.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 titleBar.BorderSizePixel = 0
-titleBar.Text = "TEXT BLOCK MANIPULATOR"
+titleBar.Text = "TEXT BLOCKS (drag)"
 titleBar.TextColor3 = Color3.fromRGB(255, 150, 50)
 titleBar.Font = Enum.Font.GothamBold
 titleBar.TextSize = 11
@@ -122,8 +161,6 @@ titleBar.InputBegan:Connect(function(input)
 	end
 end)
 
-titleBar.InputEnded:Connect(function() dragging = false end)
-
 UserInputService.InputChanged:Connect(function(input)
 	if not dragging then return end
 	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
@@ -132,7 +169,8 @@ UserInputService.InputChanged:Connect(function(input)
 	end
 end)
 
--- Text input
+UserInputService.InputEnded:Connect(function() dragging = false end)
+
 local textInput = Instance.new("TextBox")
 textInput.Size = UDim2.new(1, -20, 0, 35)
 textInput.Position = UDim2.new(0, 10, 0, 38)
@@ -146,7 +184,6 @@ textInput.Font = Enum.Font.GothamBold
 textInput.Parent = mainFrame
 Instance.new("UICorner", textInput).CornerRadius = UDim.new(0, 6)
 
--- Size
 local sizeInput = Instance.new("TextBox")
 sizeInput.Size = UDim2.new(0, 60, 0, 25)
 sizeInput.Position = UDim2.new(0, 10, 0, 82)
@@ -160,7 +197,6 @@ sizeInput.Font = Enum.Font.GothamBold
 sizeInput.Parent = mainFrame
 Instance.new("UICorner", sizeInput).CornerRadius = UDim.new(0, 4)
 
--- Increment
 local incLabel = Instance.new("TextLabel")
 incLabel.Size = UDim2.new(0, 60, 0, 15)
 incLabel.Position = UDim2.new(0, 80, 0, 80)
@@ -203,7 +239,6 @@ incDownBtn.MouseButton1Click:Connect(function()
 	incLabel.Text = "Inc: " .. increment
 end)
 
--- Rotation
 local rotLabel = Instance.new("TextLabel")
 rotLabel.Size = UDim2.new(0, 70, 0, 15)
 rotLabel.Position = UDim2.new(0, 155, 0, 80)
@@ -246,7 +281,6 @@ rotRightBtn.MouseButton1Click:Connect(function()
 	rotLabel.Text = "Rot: " .. textRotation
 end)
 
--- Position display
 local posLabel = Instance.new("TextLabel")
 posLabel.Size = UDim2.new(0, 120, 0, 15)
 posLabel.Position = UDim2.new(0, 245, 0, 80)
@@ -257,7 +291,6 @@ posLabel.TextSize = 9
 posLabel.Font = Enum.Font.GothamBold
 posLabel.Parent = mainFrame
 
--- Direction buttons in a cross pattern
 local function createDirBtn(text, x, y, color, dx, dy, dz)
 	local btn = Instance.new("TextButton")
 	btn.Size = UDim2.new(0, 45, 0, 30)
@@ -279,17 +312,13 @@ local function createDirBtn(text, x, y, color, dx, dy, dz)
 	return btn
 end
 
--- Row 1: Forward, Up, Backward
 createDirBtn("↑ UP", 145, 130, Color3.fromRGB(255, 200, 50), 0, 1, 0)
 createDirBtn("FWD", 80, 165, Color3.fromRGB(50, 200, 255), 0, 0, -1)
 createDirBtn("BACK", 195, 165, Color3.fromRGB(50, 200, 255), 0, 0, 1)
-
--- Row 2: Left, Down, Right
 createDirBtn("LEFT", 80, 200, Color3.fromRGB(255, 100, 100), -1, 0, 0)
 createDirBtn("↓ DOWN", 145, 200, Color3.fromRGB(255, 200, 50), 0, -1, 0)
 createDirBtn("RIGHT", 195, 200, Color3.fromRGB(255, 100, 100), 1, 0, 0)
 
--- Action buttons
 local grabBtn = Instance.new("TextButton")
 grabBtn.Size = UDim2.new(0, 100, 0, 35)
 grabBtn.Position = UDim2.new(0, 10, 0, 245)
@@ -338,7 +367,6 @@ disBtn.BorderSizePixel = 0
 disBtn.Parent = mainFrame
 Instance.new("UICorner", disBtn).CornerRadius = UDim.new(0, 6)
 
--- Free floating check
 local function isFreeFloating(part)
 	if not part or not part.Parent then return false end
 	if not part:IsA("BasePart") then return false end
@@ -361,7 +389,6 @@ local function isFreeFloating(part)
 	return true
 end
 
--- GRAB
 grabBtn.MouseButton1Click:Connect(function()
 	for _, block in pairs(grabbedBlocks) do
 		if block and block.Parent then
@@ -387,12 +414,11 @@ grabBtn.MouseButton1Click:Connect(function()
 		end
 	end
 	table.sort(foundParts, function(a, b) return a.dist < b.dist end)
-	for i = 1, math.min(300, #foundParts) do
+	for i = 1, math.min(maxBlocks, #foundParts) do
 		table.insert(grabbedBlocks, foundParts[i].part)
 	end
 end)
 
--- FORM
 local function formText()
 	local text = textInput.Text
 	if text == "" then return end
@@ -432,35 +458,32 @@ local function formText()
 	
 	local blockIndex = 1
 	allOffsets = {}
-	local pixelsPerBlock = math.max(1, math.floor(#pixels / #grabbedBlocks))
 	local rotAngle = math.rad(textRotation)
 	
 	for i = 1, #pixels do
 		if blockIndex > #grabbedBlocks then break end
-		if i % pixelsPerBlock == 1 or pixelsPerBlock == 1 then
-			local pixel = pixels[i]
-			local worldX = (pixel.col - totalWidth / 2) * (textSize / 5)
-			local worldY = (5 - pixel.row) * (textSize / 5)
-			
-			local cosA = math.cos(rotAngle)
-			local sinA = math.sin(rotAngle)
-			local rotatedX = worldX * cosA - (-textSize * 2) * sinA
-			local rotatedZ = worldX * sinA + (-textSize * 2) * cosA
-			
-			local finalPos = Vector3.new(rotatedX + textOffsetX, worldY + textOffsetY, rotatedZ + textOffsetZ)
-			
-			local block = grabbedBlocks[blockIndex]
-			if block and block.Parent then
-				block.Velocity = Vector3.zero
-				for _, v in pairs(block:GetChildren()) do
-					if v:IsA("BodyMover") then v:Destroy() end
-				end
-				block.CanCollide = false
-				local targetPos = root.Position + root.CFrame:VectorToWorldSpace(finalPos)
-				table.insert(allOffsets, {block = block, offset = targetPos - root.Position})
+		local pixel = pixels[i]
+		local worldX = (pixel.col - totalWidth / 2) * (textSize / 5)
+		local worldY = (5 - pixel.row) * (textSize / 5)
+		
+		local cosA = math.cos(rotAngle)
+		local sinA = math.sin(rotAngle)
+		local rotatedX = worldX * cosA - (-textSize * 2) * sinA
+		local rotatedZ = worldX * sinA + (-textSize * 2) * cosA
+		
+		local finalPos = Vector3.new(rotatedX + textOffsetX, worldY + textOffsetY, rotatedZ + textOffsetZ)
+		
+		local block = grabbedBlocks[blockIndex]
+		if block and block.Parent then
+			block.Velocity = Vector3.zero
+			for _, v in pairs(block:GetChildren()) do
+				if v:IsA("BodyMover") then v:Destroy() end
 			end
-			blockIndex = blockIndex + 1
+			block.CanCollide = false
+			local targetPos = root.Position + root.CFrame:VectorToWorldSpace(finalPos)
+			table.insert(allOffsets, {block = block, offset = targetPos - root.Position})
 		end
+		blockIndex = blockIndex + 1
 	end
 	
 	if #allOffsets == 0 then return end
@@ -480,7 +503,6 @@ end
 
 formBtn.MouseButton1Click:Connect(formText)
 
--- UPDATE
 updateBtn.MouseButton1Click:Connect(function()
 	if #allOffsets == 0 then formText() return end
 	if shapeConnection then shapeConnection:Disconnect() shapeConnection = nil end
@@ -548,7 +570,6 @@ updateBtn.MouseButton1Click:Connect(function()
 	end)
 end)
 
--- DISASSEMBLE
 disBtn.MouseButton1Click:Connect(function()
 	shapeActive = false
 	if shapeConnection then shapeConnection:Disconnect() shapeConnection = nil end
