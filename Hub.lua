@@ -7,8 +7,8 @@ sg.Name = "EityumHub"
 sg.ResetOnSpawn = false
 
 local frame = Instance.new("Frame", sg)
-frame.Size = UDim2.new(0, 200, 0, 420)
-frame.Position = UDim2.new(0, 10, 0.5, -210)
+frame.Size = UDim2.new(0, 200, 0, 450)
+frame.Position = UDim2.new(0, 10, 0.5, -225)
 frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 frame.BorderSizePixel = 0
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
@@ -93,6 +93,10 @@ end)
 
 addButton("Tornado", function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/eityum/yeayeayeyaeyayeayeyayeayeyaey/main/scripts/Tornado.lua"))()
+end)
+
+addButton("Block Spawner", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/eityum/yeayeayeyaeyayeayeyayeayeyaey/main/scripts/BlockSpawner.lua"))()
 end)
 
 addButton("Text Blocks", function()
