@@ -34,7 +34,7 @@ title.AutoButtonColor = false
 local closeBtn = Instance.new("TextButton", topBar)
 closeBtn.Size = UDim2.new(0, 24, 0, 24)
 closeBtn.Position = UDim2.new(0, 188, 0, 3)
-closeBtn.Text = "✕"
+closeBtn.Text = "X"
 closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 closeBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
 closeBtn.Font = Enum.Font.GothamBold
@@ -73,17 +73,17 @@ scriptsLabel.TextSize = 10
 
 local y = 58
 local buttonColors = {
-    Color3.fromRGB(60, 100, 200),  -- Blue
-    Color3.fromRGB(200, 70, 70),   -- Red
-    Color3.fromRGB(60, 170, 100),  -- Green
-    Color3.fromRGB(180, 120, 50),  -- Orange
-    Color3.fromRGB(140, 70, 200),  -- Purple
-    Color3.fromRGB(50, 160, 180),  -- Teal
-    Color3.fromRGB(200, 140, 50),  -- Gold
-    Color3.fromRGB(180, 60, 150),  -- Pink
-    Color3.fromRGB(80, 130, 200),  -- Steel Blue
-    Color3.fromRGB(50, 180, 100),  -- Emerald
-    Color3.fromRGB(200, 100, 100), -- Salmon
+    Color3.fromRGB(60, 100, 200),
+    Color3.fromRGB(200, 70, 70),
+    Color3.fromRGB(60, 170, 100),
+    Color3.fromRGB(180, 120, 50),
+    Color3.fromRGB(140, 70, 200),
+    Color3.fromRGB(50, 160, 180),
+    Color3.fromRGB(200, 140, 50),
+    Color3.fromRGB(180, 60, 150),
+    Color3.fromRGB(80, 130, 200),
+    Color3.fromRGB(50, 180, 100),
+    Color3.fromRGB(200, 100, 100),
 }
 
 local colorIndex = 0
@@ -104,7 +104,6 @@ local function addButton(name, callback)
     btn.AutoButtonColor = false
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
     
-    -- Hover effects
     btn.MouseEnter:Connect(function()
         btn.BackgroundColor3 = Color3.new(col.R * 1.2, col.G * 1.2, col.B * 1.2)
     end)
