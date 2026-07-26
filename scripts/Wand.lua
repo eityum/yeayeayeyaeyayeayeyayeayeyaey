@@ -1,4 +1,4 @@
--- WorldEdit Wand - Maximum Speed - 4x4x4 Blocks - CoreGui
+-- WorldEdit Wand - Reliable Placement - 4x4x4 Blocks - CoreGui
 local UIS = game:GetService("UserInputService")
 local WS = game:GetService("Workspace")
 local PS = game:GetService("Players")
@@ -248,9 +248,7 @@ execBtn.MouseButton1Click:Connect(function()
     status.Text = "Placing " .. total .. " blocks..."
     
     for i = 1, total do
-        spawn(function()
-            StampAsset:InvokeServer(blockId, positions[i], uuid, {spawnLocation}, 0)
-        end)
+        StampAsset:InvokeServer(blockId, positions[i], uuid, {spawnLocation}, 0)
     end
     
     status.Text = "Done! " .. total .. " blocks"
