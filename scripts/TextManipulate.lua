@@ -1,8 +1,9 @@
--- Text Block Manipulator - Infinite Characters + URL Symbols
+-- Text Block Shaper - 4x4x4 BLOCKS - NO GAPS - NO RESIZE - CHAR SPACING - RUSSIAN - COREGUI
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
 
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
@@ -11,16 +12,14 @@ local humanoid = character:WaitForChild("Humanoid")
 local grabbedBlocks = {}
 local shapeActive = false
 local shapeConnection = nil
-local textSize = 20
-local textRotation = 0
-local textOffsetX = 0
-local textOffsetY = 3
-local textOffsetZ = -40
 local allOffsets = {}
-local increment = 1
 local maxBlocks = 9999
 
+local textPosition = Vector3.new(-4, 147, -296)
+local textLookDirection = Vector3.new(0, 0, -1)
+
 local font = {
+	-- English
 	A = {"  X  "," X X ","XXXXX","X   X","X   X"},
 	B = {"XXXX ","X   X","XXXX ","X   X","XXXX "},
 	C = {" XXXX","X    ","X    ","X    "," XXXX"},
@@ -87,6 +86,7 @@ local font = {
 	["^"] = {"  X  "," X X ","X   X","     ","     "},
 	["`"] = {" X   ","  X  ","     ","     ","     "},
 	["~"] = {"     "," X X ","X X X","     ","     "},
+	-- Russian uppercase
 	["А"] = {"  X  "," X X ","XXXXX","X   X","X   X"},
 	["Б"] = {"XXXXX","X    ","XXXX ","X   X","XXXX "},
 	["В"] = {"XXXX ","X   X","XXXX ","X   X","XXXX "},
@@ -107,7 +107,7 @@ local font = {
 	["Р"] = {"XXXX ","X   X","XXXX ","X    ","X    "},
 	["С"] = {" XXXX","X    ","X    ","X    "," XXXX"},
 	["Т"] = {"XXXXX","  X  ","  X  ","  X  ","  X  "},
-	["У"] = {"X   X","X   X","X   X"," XXXX","    X"},
+	["У"] = {"X   X"," X X ","  X  ","  X  ","  X  "},
 	["Ф"] = {"  X  ","X X X","X X X","X X X"," X X "},
 	["Х"] = {"X   X"," X X ","  X  "," X X ","X   X"},
 	["Ц"] = {"X   X","X   X","X   X","XXXXX","    X"},
@@ -123,249 +123,109 @@ local font = {
 }
 
 -- GUI
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "TextBlock"
-screenGui.ResetOnSpawn = false
-screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-screenGui.Parent = player:WaitForChild("PlayerGui")
+local sg = Instance.new("ScreenGui", CoreGui)
+sg.Name = "TextShaper"
 
-local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 360, 0, 320)
-mainFrame.Position = UDim2.new(0.5, -180, 0.5, -160)
-mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-mainFrame.BorderSizePixel = 0
-mainFrame.Parent = screenGui
-Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 10)
+local frame = Instance.new("Frame", sg)
+frame.Size = UDim2.new(0, 280, 0, 160)
+frame.Position = UDim2.new(0.5, -140, 0.5, -80)
+frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+frame.BorderSizePixel = 0
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
 
-local titleBar = Instance.new("TextButton")
-titleBar.Size = UDim2.new(1, 0, 0, 30)
+local titleBar = Instance.new("TextButton", frame)
+titleBar.Size = UDim2.new(1, 0, 0, 24)
 titleBar.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-titleBar.BorderSizePixel = 0
-titleBar.Text = "TEXT BLOCKS (drag)"
+titleBar.Text = "TEXT SHAPER (-4, 147, -296)"
 titleBar.TextColor3 = Color3.fromRGB(255, 150, 50)
 titleBar.Font = Enum.Font.GothamBold
-titleBar.TextSize = 11
+titleBar.TextSize = 10
 titleBar.AutoButtonColor = false
-titleBar.Parent = mainFrame
-Instance.new("UICorner", titleBar).CornerRadius = UDim.new(0, 10)
+Instance.new("UICorner", titleBar).CornerRadius = UDim.new(0, 8)
 
-local dragging = false
-local dragStart = nil
-local startPos = nil
+local textBox = Instance.new("TextBox", frame)
+textBox.Size = UDim2.new(1, -20, 0, 30)
+textBox.Position = UDim2.new(0, 10, 0, 32)
+textBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+textBox.PlaceholderText = "Enter text (EN/RU)..."
+textBox.Text = ""
+textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+textBox.Font = Enum.Font.GothamBold
+textBox.TextSize = 14
+textBox.BorderSizePixel = 0
+Instance.new("UICorner", textBox).CornerRadius = UDim.new(0, 5)
 
-titleBar.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-		dragging = true
-		dragStart = input.Position
-		startPos = mainFrame.Position
-	end
-end)
+local sizeBox = Instance.new("TextBox", frame)
+sizeBox.Size = UDim2.new(0, 60, 0, 24)
+sizeBox.Position = UDim2.new(0, 10, 0, 70)
+sizeBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+sizeBox.Text = "20"
+sizeBox.PlaceholderText = "Res"
+sizeBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+sizeBox.Font = Enum.Font.GothamBold
+sizeBox.TextSize = 12
+sizeBox.BorderSizePixel = 0
+Instance.new("UICorner", sizeBox).CornerRadius = UDim.new(0, 4)
 
-UserInputService.InputChanged:Connect(function(input)
-	if not dragging then return end
-	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-		local delta = input.Position - dragStart
-		mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-	end
-end)
-
-UserInputService.InputEnded:Connect(function() dragging = false end)
-
-local textInput = Instance.new("TextBox")
-textInput.Size = UDim2.new(1, -20, 0, 35)
-textInput.Position = UDim2.new(0, 10, 0, 38)
-textInput.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-textInput.BorderSizePixel = 0
-textInput.PlaceholderText = "Type text here..."
-textInput.Text = ""
-textInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-textInput.TextSize = 16
-textInput.Font = Enum.Font.GothamBold
-textInput.Parent = mainFrame
-Instance.new("UICorner", textInput).CornerRadius = UDim.new(0, 6)
-
-local sizeInput = Instance.new("TextBox")
-sizeInput.Size = UDim2.new(0, 60, 0, 25)
-sizeInput.Position = UDim2.new(0, 10, 0, 82)
-sizeInput.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-sizeInput.BorderSizePixel = 0
-sizeInput.Text = "20"
-sizeInput.PlaceholderText = "Size"
-sizeInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-sizeInput.TextSize = 12
-sizeInput.Font = Enum.Font.GothamBold
-sizeInput.Parent = mainFrame
-Instance.new("UICorner", sizeInput).CornerRadius = UDim.new(0, 4)
-
-local incLabel = Instance.new("TextLabel")
-incLabel.Size = UDim2.new(0, 60, 0, 15)
-incLabel.Position = UDim2.new(0, 80, 0, 80)
-incLabel.BackgroundTransparency = 1
-incLabel.Text = "Inc: " .. increment
-incLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-incLabel.TextSize = 10
-incLabel.Font = Enum.Font.GothamBold
-incLabel.Parent = mainFrame
-
-local incDownBtn = Instance.new("TextButton")
-incDownBtn.Size = UDim2.new(0, 28, 0, 22)
-incDownBtn.Position = UDim2.new(0, 80, 0, 97)
-incDownBtn.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
-incDownBtn.Text = "-"
-incDownBtn.Font = Enum.Font.GothamBold
-incDownBtn.TextSize = 14
-incDownBtn.BorderSizePixel = 0
-incDownBtn.Parent = mainFrame
-Instance.new("UICorner", incDownBtn).CornerRadius = UDim.new(0, 4)
-
-local incUpBtn = Instance.new("TextButton")
-incUpBtn.Size = UDim2.new(0, 28, 0, 22)
-incUpBtn.Position = UDim2.new(0, 112, 0, 97)
-incUpBtn.BackgroundColor3 = Color3.fromRGB(80, 255, 80)
-incUpBtn.Text = "+"
-incUpBtn.Font = Enum.Font.GothamBold
-incUpBtn.TextSize = 14
-incUpBtn.BorderSizePixel = 0
-incUpBtn.Parent = mainFrame
-Instance.new("UICorner", incUpBtn).CornerRadius = UDim.new(0, 4)
-
-incUpBtn.MouseButton1Click:Connect(function()
-	increment = increment + 1
-	incLabel.Text = "Inc: " .. increment
-end)
-
-incDownBtn.MouseButton1Click:Connect(function()
-	increment = math.max(1, increment - 1)
-	incLabel.Text = "Inc: " .. increment
-end)
-
-local rotLabel = Instance.new("TextLabel")
-rotLabel.Size = UDim2.new(0, 70, 0, 15)
-rotLabel.Position = UDim2.new(0, 155, 0, 80)
-rotLabel.BackgroundTransparency = 1
-rotLabel.Text = "Rot: " .. textRotation
-rotLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-rotLabel.TextSize = 10
-rotLabel.Font = Enum.Font.GothamBold
-rotLabel.Parent = mainFrame
-
-local rotLeftBtn = Instance.new("TextButton")
-rotLeftBtn.Size = UDim2.new(0, 35, 0, 25)
-rotLeftBtn.Position = UDim2.new(0, 155, 0, 95)
-rotLeftBtn.BackgroundColor3 = Color3.fromRGB(255, 150, 50)
-rotLeftBtn.Text = "◀"
-rotLeftBtn.Font = Enum.Font.GothamBold
-rotLeftBtn.TextSize = 14
-rotLeftBtn.BorderSizePixel = 0
-rotLeftBtn.Parent = mainFrame
-Instance.new("UICorner", rotLeftBtn).CornerRadius = UDim.new(0, 4)
-
-local rotRightBtn = Instance.new("TextButton")
-rotRightBtn.Size = UDim2.new(0, 35, 0, 25)
-rotRightBtn.Position = UDim2.new(0, 195, 0, 95)
-rotRightBtn.BackgroundColor3 = Color3.fromRGB(255, 150, 50)
-rotRightBtn.Text = "▶"
-rotRightBtn.Font = Enum.Font.GothamBold
-rotRightBtn.TextSize = 14
-rotRightBtn.BorderSizePixel = 0
-rotRightBtn.Parent = mainFrame
-Instance.new("UICorner", rotRightBtn).CornerRadius = UDim.new(0, 4)
-
-rotLeftBtn.MouseButton1Click:Connect(function()
-	textRotation = textRotation - 15
-	rotLabel.Text = "Rot: " .. textRotation
-end)
-
-rotRightBtn.MouseButton1Click:Connect(function()
-	textRotation = textRotation + 15
-	rotLabel.Text = "Rot: " .. textRotation
-end)
-
-local posLabel = Instance.new("TextLabel")
-posLabel.Size = UDim2.new(0, 120, 0, 15)
-posLabel.Position = UDim2.new(0, 245, 0, 80)
-posLabel.BackgroundTransparency = 1
-posLabel.Text = "X:" .. textOffsetX .. " Y:" .. textOffsetY .. " Z:" .. textOffsetZ
-posLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-posLabel.TextSize = 9
-posLabel.Font = Enum.Font.GothamBold
-posLabel.Parent = mainFrame
-
-local function createDirBtn(text, x, y, color, dx, dy, dz)
-	local btn = Instance.new("TextButton")
-	btn.Size = UDim2.new(0, 45, 0, 30)
-	btn.Position = UDim2.new(0, x, 0, y)
-	btn.BackgroundColor3 = color
-	btn.Text = text
-	btn.Font = Enum.Font.GothamBold
-	btn.TextSize = 12
-	btn.BorderSizePixel = 0
-	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	btn.Parent = mainFrame
-	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
-	btn.MouseButton1Click:Connect(function()
-		textOffsetX = textOffsetX + (dx * increment)
-		textOffsetY = textOffsetY + (dy * increment)
-		textOffsetZ = textOffsetZ + (dz * increment)
-		posLabel.Text = "X:" .. textOffsetX .. " Y:" .. textOffsetY .. " Z:" .. textOffsetZ
-	end)
-	return btn
-end
-
-createDirBtn("↑ UP", 145, 130, Color3.fromRGB(255, 200, 50), 0, 1, 0)
-createDirBtn("FWD", 80, 165, Color3.fromRGB(50, 200, 255), 0, 0, -1)
-createDirBtn("BACK", 195, 165, Color3.fromRGB(50, 200, 255), 0, 0, 1)
-createDirBtn("LEFT", 80, 200, Color3.fromRGB(255, 100, 100), -1, 0, 0)
-createDirBtn("↓ DOWN", 145, 200, Color3.fromRGB(255, 200, 50), 0, -1, 0)
-createDirBtn("RIGHT", 195, 200, Color3.fromRGB(255, 100, 100), 1, 0, 0)
-
-local grabBtn = Instance.new("TextButton")
-grabBtn.Size = UDim2.new(0, 100, 0, 35)
-grabBtn.Position = UDim2.new(0, 10, 0, 245)
+local grabBtn = Instance.new("TextButton", frame)
+grabBtn.Size = UDim2.new(0, 90, 0, 28)
+grabBtn.Position = UDim2.new(0, 80, 0, 68)
 grabBtn.BackgroundColor3 = Color3.fromRGB(50, 150, 255)
 grabBtn.Text = "GRAB"
 grabBtn.Font = Enum.Font.GothamBold
-grabBtn.TextSize = 14
+grabBtn.TextSize = 12
 grabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 grabBtn.BorderSizePixel = 0
-grabBtn.Parent = mainFrame
-Instance.new("UICorner", grabBtn).CornerRadius = UDim.new(0, 6)
+Instance.new("UICorner", grabBtn).CornerRadius = UDim.new(0, 5)
 
-local formBtn = Instance.new("TextButton")
-formBtn.Size = UDim2.new(0, 100, 0, 35)
-formBtn.Position = UDim2.new(0, 120, 0, 245)
+local formBtn = Instance.new("TextButton", frame)
+formBtn.Size = UDim2.new(0, 90, 0, 28)
+formBtn.Position = UDim2.new(0, 178, 0, 68)
 formBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
 formBtn.Text = "FORM"
 formBtn.Font = Enum.Font.GothamBold
-formBtn.TextSize = 14
+formBtn.TextSize = 12
 formBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 formBtn.BorderSizePixel = 0
-formBtn.Parent = mainFrame
-Instance.new("UICorner", formBtn).CornerRadius = UDim.new(0, 6)
+Instance.new("UICorner", formBtn).CornerRadius = UDim.new(0, 5)
 
-local updateBtn = Instance.new("TextButton")
-updateBtn.Size = UDim2.new(0, 100, 0, 35)
-updateBtn.Position = UDim2.new(0, 230, 0, 245)
-updateBtn.BackgroundColor3 = Color3.fromRGB(255, 200, 50)
-updateBtn.Text = "UPDATE"
-updateBtn.Font = Enum.Font.GothamBold
-updateBtn.TextSize = 14
-updateBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-updateBtn.BorderSizePixel = 0
-updateBtn.Parent = mainFrame
-Instance.new("UICorner", updateBtn).CornerRadius = UDim.new(0, 6)
+local status = Instance.new("TextLabel", frame)
+status.Size = UDim2.new(1, 0, 0, 18)
+status.Position = UDim2.new(0, 0, 0, 105)
+status.BackgroundTransparency = 1
+status.Text = "Ready | 4x4x4 | Char gap 4s"
+status.TextColor3 = Color3.fromRGB(180, 180, 180)
+status.Font = Enum.Font.Gotham
+status.TextSize = 9
 
-local disBtn = Instance.new("TextButton")
-disBtn.Size = UDim2.new(1, -20, 0, 30)
-disBtn.Position = UDim2.new(0, 10, 0, 285)
+local disBtn = Instance.new("TextButton", frame)
+disBtn.Size = UDim2.new(1, -20, 0, 24)
+disBtn.Position = UDim2.new(0, 10, 0, 125)
 disBtn.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
 disBtn.Text = "DISASSEMBLE"
 disBtn.Font = Enum.Font.GothamBold
-disBtn.TextSize = 12
+disBtn.TextSize = 11
 disBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 disBtn.BorderSizePixel = 0
-disBtn.Parent = mainFrame
-Instance.new("UICorner", disBtn).CornerRadius = UDim.new(0, 6)
+Instance.new("UICorner", disBtn).CornerRadius = UDim.new(0, 5)
+
+-- Dragging
+local drag, dStart, sPos = false, nil, nil
+titleBar.InputBegan:Connect(function(i)
+	if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+		drag = true; dStart = i.Position; sPos = frame.Position
+	end
+end)
+UserInputService.InputChanged:Connect(function(i)
+	if not drag then return end
+	if i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch then
+		local d = i.Position - dStart
+		frame.Position = UDim2.new(sPos.X.Scale, sPos.X.Offset + d.X, sPos.Y.Scale, sPos.Y.Offset + d.Y)
+	end
+end)
+UserInputService.InputEnded:Connect(function(i)
+	if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then drag = false end
+end)
 
 local function isFreeFloating(part)
 	if not part or not part.Parent then return false end
@@ -389,10 +249,32 @@ local function isFreeFloating(part)
 	return true
 end
 
+local function startHolding()
+	if shapeConnection then shapeConnection:Disconnect() end
+	if #allOffsets == 0 then return end
+	shapeActive = true
+	shapeConnection = RunService.Heartbeat:Connect(function()
+		if not shapeActive then return end
+		for _, data in pairs(allOffsets) do
+			if data.block and data.block.Parent then
+				data.block.CFrame = data.worldPos
+			end
+		end
+	end)
+end
+
+local function stopHolding()
+	shapeActive = false
+	if shapeConnection then shapeConnection:Disconnect() shapeConnection = nil end
+end
+
 grabBtn.MouseButton1Click:Connect(function()
+	stopHolding()
+	
 	for _, block in pairs(grabbedBlocks) do
 		if block and block.Parent then
 			block.Velocity = Vector3.zero
+			block.RotVelocity = Vector3.zero
 			for _, v in pairs(block:GetChildren()) do
 				if v:IsA("BodyMover") then v:Destroy() end
 			end
@@ -400,12 +282,11 @@ grabBtn.MouseButton1Click:Connect(function()
 		end
 	end
 	table.clear(grabbedBlocks)
-	if shapeConnection then shapeConnection:Disconnect() shapeConnection = nil end
-	shapeActive = false
-	
+	allOffsets = {}
+
 	local root = character:FindFirstChild("HumanoidRootPart")
 	if not root then return end
-	
+
 	local foundParts = {}
 	for _, part in pairs(Workspace:GetDescendants()) do
 		if isFreeFloating(part) and part.Transparency < 0.5 then
@@ -417,165 +298,88 @@ grabBtn.MouseButton1Click:Connect(function()
 	for i = 1, math.min(maxBlocks, #foundParts) do
 		table.insert(grabbedBlocks, foundParts[i].part)
 	end
+	status.Text = "Grabbed: " .. #grabbedBlocks .. " parts"
 end)
 
-local function formText()
-	local text = textInput.Text
+formBtn.MouseButton1Click:Connect(function()
+	stopHolding()
+	
+	local text = textBox.Text
 	if text == "" then return end
-	if #grabbedBlocks == 0 then return end
-	if shapeConnection then shapeConnection:Disconnect() shapeConnection = nil end
-	
-	local root = character:FindFirstChild("HumanoidRootPart")
-	if not root then return end
-	
-	local rad = tonumber(sizeInput.Text) or textSize
-	textSize = rad
-	
-	local upperText = ""
-	for _, codepoint in utf8.codes(text) do
-		upperText = upperText .. utf8.char(codepoint):upper()
+	if #grabbedBlocks == 0 then
+		status.Text = "Grab parts first!"
+		return
 	end
-	
+
+	local resolution = tonumber(sizeBox.Text) or 20
+	local scale = resolution / 20
+	local cellSize = 4
+
+	local upperText = text:upper()
+
 	local pixels = {}
 	local totalChars = 0
-	
-	for _, codepoint in utf8.codes(upperText) do
-		local char = utf8.char(codepoint)
-		local glyph = font[char] or font[" "]
-		for row = 1, 5 do
-			for col = 1, 5 do
-				local c = glyph[row]:sub(col, col)
-				if c == "X" then
-					table.insert(pixels, {row = row, col = col + (totalChars * 6)})
-				end
-			end
-		end
-		totalChars = totalChars + 1
-	end
-	
-	local totalWidth = totalChars * 6
-	if #pixels == 0 then return end
-	
-	local blockIndex = 1
-	allOffsets = {}
-	local rotAngle = math.rad(textRotation)
-	
-	for i = 1, #pixels do
-		if blockIndex > #grabbedBlocks then break end
-		local pixel = pixels[i]
-		local worldX = (pixel.col - totalWidth / 2) * (textSize / 5)
-		local worldY = (5 - pixel.row) * (textSize / 5)
-		
-		local cosA = math.cos(rotAngle)
-		local sinA = math.sin(rotAngle)
-		local rotatedX = worldX * cosA - (-textSize * 2) * sinA
-		local rotatedZ = worldX * sinA + (-textSize * 2) * cosA
-		
-		local finalPos = Vector3.new(rotatedX + textOffsetX, worldY + textOffsetY, rotatedZ + textOffsetZ)
-		
-		local block = grabbedBlocks[blockIndex]
-		if block and block.Parent then
-			block.Velocity = Vector3.zero
-			for _, v in pairs(block:GetChildren()) do
-				if v:IsA("BodyMover") then v:Destroy() end
-			end
-			block.CanCollide = false
-			local targetPos = root.Position + root.CFrame:VectorToWorldSpace(finalPos)
-			table.insert(allOffsets, {block = block, offset = targetPos - root.Position})
-		end
-		blockIndex = blockIndex + 1
-	end
-	
-	if #allOffsets == 0 then return end
-	
-	shapeActive = true
-	shapeConnection = RunService.Heartbeat:Connect(function()
-		if not shapeActive then return end
-		local root = character:FindFirstChild("HumanoidRootPart")
-		if not root then return end
-		for _, data in pairs(allOffsets) do
-			if data.block and data.block.Parent then
-				data.block.Velocity = (root.Position + data.offset - data.block.Position) * 15
-			end
-		end
-	end)
-end
 
-formBtn.MouseButton1Click:Connect(formText)
-
-updateBtn.MouseButton1Click:Connect(function()
-	if #allOffsets == 0 then formText() return end
-	if shapeConnection then shapeConnection:Disconnect() shapeConnection = nil end
-	
-	local root = character:FindFirstChild("HumanoidRootPart")
-	if not root then return end
-	
-	local rotAngle = math.rad(textRotation)
-	local pixels = {}
-	local upperText = ""
-	for _, codepoint in utf8.codes(textInput.Text) do
-		upperText = upperText .. utf8.char(codepoint):upper()
-	end
-	
-	local totalChars = 0
 	for _, codepoint in utf8.codes(upperText) do
 		local char = utf8.char(codepoint)
 		local glyph = font[char] or font[" "]
 		for row = 1, 5 do
 			for col = 1, 5 do
 				if glyph[row]:sub(col, col) == "X" then
-					table.insert(pixels, {row = row, col = col + (totalChars * 6)})
+					for sy = 0, scale - 1 do
+						for sx = 0, scale - 1 do
+							table.insert(pixels, {
+								row = (row - 1) * scale + sy + 1,
+								col = (col - 1 + totalChars * 6) * scale + sx + 1
+							})
+						end
+					end
 				end
 			end
 		end
 		totalChars = totalChars + 1
 	end
-	
-	local totalWidth = totalChars * 6
+
+	local totalWidth = totalChars * 6 * scale
+	if #pixels == 0 then return end
+
 	local blockIndex = 1
-	local newOffsets = {}
-	
+	allOffsets = {}
+	local baseCF = CFrame.new(textPosition, textPosition + textLookDirection)
+
 	for i = 1, #pixels do
 		if blockIndex > #grabbedBlocks then break end
 		local pixel = pixels[i]
-		local worldX = (pixel.col - totalWidth / 2) * (textSize / 5)
-		local worldY = (5 - pixel.row) * (textSize / 5)
-		
-		local cosA = math.cos(rotAngle)
-		local sinA = math.sin(rotAngle)
-		local rotatedX = worldX * cosA - (-textSize * 2) * sinA
-		local rotatedZ = worldX * sinA + (-textSize * 2) * cosA
-		
-		local finalPos = Vector3.new(rotatedX + textOffsetX, worldY + textOffsetY, rotatedZ + textOffsetZ)
+		local worldX = (pixel.col - totalWidth / 2) * cellSize
+		local worldY = (5 * scale - pixel.row) * cellSize
+
 		local block = grabbedBlocks[blockIndex]
 		if block and block.Parent then
-			local targetPos = root.Position + root.CFrame:VectorToWorldSpace(finalPos)
-			table.insert(newOffsets, {block = block, offset = targetPos - root.Position})
+			block.Velocity = Vector3.zero
+			block.RotVelocity = Vector3.zero
+			for _, v in pairs(block:GetChildren()) do
+				if v:IsA("BodyMover") then v:Destroy() end
+			end
+			block.CanCollide = false
+			block.Anchored = false
+			local worldPos = baseCF * CFrame.new(worldX, worldY, 0)
+			block.CFrame = worldPos
+			table.insert(allOffsets, {block = block, worldPos = worldPos})
 		end
 		blockIndex = blockIndex + 1
 	end
-	
-	allOffsets = newOffsets
-	
-	shapeActive = true
-	shapeConnection = RunService.Heartbeat:Connect(function()
-		if not shapeActive then return end
-		local root = character:FindFirstChild("HumanoidRootPart")
-		if not root then return end
-		for _, data in pairs(allOffsets) do
-			if data.block and data.block.Parent then
-				data.block.Velocity = (root.Position + data.offset - data.block.Position) * 15
-			end
-		end
-	end)
+
+	startHolding()
+	status.Text = "Formed: " .. upperText .. " | Res " .. resolution .. " | " .. #pixels .. " blocks"
 end)
 
 disBtn.MouseButton1Click:Connect(function()
-	shapeActive = false
-	if shapeConnection then shapeConnection:Disconnect() shapeConnection = nil end
+	stopHolding()
+	
 	for _, block in pairs(grabbedBlocks) do
 		if block and block.Parent then
 			block.Velocity = Vector3.zero
+			block.RotVelocity = Vector3.zero
 			for _, v in pairs(block:GetChildren()) do
 				if v:IsA("BodyMover") then v:Destroy() end
 			end
@@ -584,23 +388,12 @@ disBtn.MouseButton1Click:Connect(function()
 	end
 	table.clear(grabbedBlocks)
 	allOffsets = {}
+	status.Text = "Dissasembled"
 end)
 
 player.CharacterAdded:Connect(function(char)
 	character = char
 	humanoid = character:WaitForChild("Humanoid")
-	screenGui.Parent = player:WaitForChild("PlayerGui")
-	shapeActive = false
-	if shapeConnection then shapeConnection:Disconnect() shapeConnection = nil end
-	for _, block in pairs(grabbedBlocks) do
-		if block and block.Parent then
-			block.Velocity = Vector3.zero
-			block.CanCollide = true
-			for _, v in pairs(block:GetChildren()) do
-				if v:IsA("BodyMover") then v:Destroy() end
-			end
-		end
-	end
-	table.clear(grabbedBlocks)
-	allOffsets = {}
 end)
+
+startHolding()
