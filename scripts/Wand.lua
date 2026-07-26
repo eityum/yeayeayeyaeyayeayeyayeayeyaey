@@ -1,9 +1,11 @@
--- WorldEdit Wand - Reliable Placement - 4x4x4 Blocks - CoreGui
+-- WorldEdit Wand - Fast Build + Delete - 4x4x4 Blocks - CoreGui
 local UIS = game:GetService("UserInputService")
 local WS = game:GetService("Workspace")
 local PS = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
-local StampAsset = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("StampAsset")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StampAsset = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("StampAsset")
+local DeleteAsset = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("DeleteAsset")
 
 local player = PS.LocalPlayer
 local mouse = player:GetMouse()
@@ -28,7 +30,7 @@ sg.Name = "WandTool"
 sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local frame = Instance.new("Frame", sg)
-frame.Size = UDim2.new(0, 250, 0, 212)
+frame.Size = UDim2.new(0, 250, 0, 240)
 frame.Position = UDim2.new(0, 10, 0, 10)
 frame.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
 frame.BorderSizePixel = 0
@@ -122,6 +124,7 @@ pos2Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
 pos2Btn.BorderSizePixel = 0
 Instance.new("UICorner", pos2Btn).CornerRadius = UDim.new(0, 5)
 
+-- Build Modes
 local modeLabel = Instance.new("TextLabel", frame)
 modeLabel.Size = UDim2.new(1, 0, 0, 16)
 modeLabel.Position = UDim2.new(0, 10, 0, 94)
@@ -133,10 +136,10 @@ modeLabel.TextSize = 10
 modeLabel.TextXAlignment = Enum.TextXAlignment.Left
 
 local modeBtns = {}
-local function modeBtn(text, x, m)
+local function modeBtn(text, x, yPos, m, w)
     local btn = Instance.new("TextButton", frame)
-    btn.Size = UDim2.new(0, 55, 0, 24)
-    btn.Position = UDim2.new(0, x, 0, 110)
+    btn.Size = UDim2.new(0, w or 55, 0, 24)
+    btn.Position = UDim2.new(0, x, 0, yPos)
     btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
     btn.Text = text
     btn.Font = Enum.Font.GothamBold
@@ -154,15 +157,21 @@ local function modeBtn(text, x, m)
     return btn
 end
 
-local fillModeBtn = modeBtn("Fill", 10, "set")
-modeBtn("Walls", 70, "walls")
-modeBtn("Floor", 130, "floor")
-modeBtn("Line", 190, "line")
+-- Row 1: Build modes
+local fillModeBtn = modeBtn("Fill", 10, 110, "set")
+modeBtn("Walls", 70, 110, "walls")
+modeBtn("Floor", 130, 110, "floor")
+modeBtn("Line", 190, 110, "line")
 fillModeBtn.BackgroundColor3 = Color3.fromRGB(100, 180, 100)
+
+-- Row 2: Delete modes
+modeBtn("Delete", 10, 140, "delete", 75)
+modeBtn("DelArea", 90, 140, "deletearea", 75)
+modeBtn("Undel", 170, 140, "undelete", 70)
 
 local execBtn = Instance.new("TextButton", frame)
 execBtn.Size = UDim2.new(1, -20, 0, 30)
-execBtn.Position = UDim2.new(0, 10, 0, 140)
+execBtn.Position = UDim2.new(0, 10, 0, 170)
 execBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
 execBtn.Text = "EXECUTE"
 execBtn.Font = Enum.Font.GothamBold
@@ -173,7 +182,7 @@ Instance.new("UICorner", execBtn).CornerRadius = UDim.new(0, 6)
 
 local status = Instance.new("TextLabel", frame)
 status.Size = UDim2.new(1, 0, 0, 14)
-status.Position = UDim2.new(0, 0, 0, 176)
+status.Position = UDim2.new(0, 0, 0, 206)
 status.BackgroundTransparency = 1
 status.Text = "Click POS1/POS2 then click a block"
 status.TextColor3 = Color3.fromRGB(180, 180, 180)
@@ -211,10 +220,60 @@ end)
 
 execBtn.MouseButton1Click:Connect(function()
     if not pos1 or not pos2 then status.Text = "Set both positions!" return end
-    blockId = tonumber(idBox.Text) or 56450668
+    
     local minX, maxX = math.min(pos1.X, pos2.X), math.max(pos1.X, pos2.X)
     local minY, maxY = math.min(pos1.Y, pos2.Y), math.max(pos1.Y, pos2.Y)
     local minZ, maxZ = math.min(pos1.Z, pos2.Z), math.max(pos1.Z, pos2.Z)
+    
+    if mode == "delete" then
+        for _, v in pairs(Active:GetChildren()) do
+            if v:IsA("Model") and v.PrimaryPart then
+                local p = v.PrimaryPart.Position
+                if p.X >= minX and p.X <= maxX and p.Y >= minY and p.Y <= maxY and p.Z >= minZ and p.Z <= maxZ then
+                    DeleteAsset:InvokeServer(v)
+                    status.Text = "Deleted: " .. v.Name
+                    return
+                end
+            end
+        end
+        status.Text = "No asset found"
+        return
+    end
+    
+    if mode == "deletearea" then
+        local count = 0
+        for _, v in pairs(Active:GetChildren()) do
+            if v:IsA("Model") and v.PrimaryPart then
+                local p = v.PrimaryPart.Position
+                if p.X >= minX and p.X <= maxX and p.Y >= minY and p.Y <= maxY and p.Z >= minZ and p.Z <= maxZ then
+                    spawn(function() DeleteAsset:InvokeServer(v) end)
+                    count = count + 1
+                end
+            end
+        end
+        status.Text = "Deleted " .. count .. " assets"
+        return
+    end
+    
+    if mode == "undelete" then
+        local bin = WS:FindFirstChild("LocalBin")
+        if bin then
+            for _, v in pairs(bin:GetChildren()) do
+                if v:IsA("Model") and v.PrimaryPart then
+                    local p = v.PrimaryPart.Position
+                    if p.X >= minX and p.X <= maxX and p.Y >= minY and p.Y <= maxY and p.Z >= minZ and p.Z <= maxZ then
+                        v.Parent = Active
+                        status.Text = "Undeleted: " .. v.Name
+                        return
+                    end
+                end
+            end
+        end
+        status.Text = "No deleted asset found"
+        return
+    end
+    
+    blockId = tonumber(idBox.Text) or 56450668
     
     local positions = {}
     for x = minX, maxX, 4 do
@@ -248,7 +307,9 @@ execBtn.MouseButton1Click:Connect(function()
     status.Text = "Placing " .. total .. " blocks..."
     
     for i = 1, total do
-        StampAsset:InvokeServer(blockId, positions[i], uuid, {spawnLocation}, 0)
+        spawn(function()
+            StampAsset:InvokeServer(blockId, positions[i], uuid, {spawnLocation}, 0)
+        end)
     end
     
     status.Text = "Done! " .. total .. " blocks"
