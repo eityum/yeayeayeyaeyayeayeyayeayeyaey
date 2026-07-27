@@ -1,4 +1,4 @@
--- WorldEdit Wand - Fast Build + Delete - 4x4x4 Blocks - CoreGui
+-- WorldEdit Wand - Fast Build + Delete + Color Buttons + Custom ID - CoreGui
 local UIS = game:GetService("UserInputService")
 local WS = game:GetService("Workspace")
 local PS = game:GetService("Players")
@@ -24,13 +24,30 @@ local pos1, pos2, mode, blockId = nil, nil, "set", 56450668
 local uuid = "{c832eeb8-caaa-4b3c-ac7e-741e0d3875b1}"
 local wait1, wait2 = false, false
 
+local COLORS = {
+    {name = "White", id = 56452868, color = Color3.fromRGB(248, 248, 248)},
+    {name = "Black", id = 56453053, color = Color3.fromRGB(17, 17, 17)},
+    {name = "Red", id = 56452821, color = Color3.fromRGB(196, 40, 28)},
+    {name = "Green", id = 56452651, color = Color3.fromRGB(58, 125, 21)},
+    {name = "Blue", id = 56452539, color = Color3.fromRGB(33, 84, 185)},
+    {name = "Yellow", id = 56452718, color = Color3.fromRGB(253, 234, 141)},
+    {name = "Cyan", id = 56452470, color = Color3.fromRGB(4, 175, 236)},
+    {name = "Magenta", id = 56452342, color = Color3.fromRGB(170, 0, 170)},
+    {name = "Orange", id = 56452768, color = Color3.fromRGB(226, 155, 64)},
+    {name = "Purple", id = 56452411, color = Color3.fromRGB(98, 37, 209)},
+    {name = "DkGreen", id = 56452610, color = Color3.fromRGB(39, 70, 45)},
+    {name = "Gray", id = 56453012, color = Color3.fromRGB(163, 162, 165)},
+    {name = "Brown", id = 41324954, color = Color3.fromRGB(105, 64, 40)},
+    {name = "Pink", id = 56452293, color = Color3.fromRGB(255, 102, 204)},
+}
+
 -- GUI
 local sg = Instance.new("ScreenGui", CoreGui)
 sg.Name = "WandTool"
 sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local frame = Instance.new("Frame", sg)
-frame.Size = UDim2.new(0, 250, 0, 240)
+frame.Size = UDim2.new(0, 250, 0, 330)
 frame.Position = UDim2.new(0, 10, 0, 10)
 frame.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
 frame.BorderSizePixel = 0
@@ -81,6 +98,7 @@ UIS.InputEnded:Connect(function(i)
     if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then drag = false end
 end)
 
+-- Custom Block ID
 local idLabel = Instance.new("TextLabel", frame)
 idLabel.Size = UDim2.new(0, 55, 0, 16)
 idLabel.Position = UDim2.new(0, 10, 0, 32)
@@ -102,24 +120,25 @@ idBox.TextSize = 11
 idBox.BorderSizePixel = 0
 Instance.new("UICorner", idBox).CornerRadius = UDim.new(0, 4)
 
+-- POS buttons
 local pos1Btn = Instance.new("TextButton", frame)
-pos1Btn.Size = UDim2.new(0, 110, 0, 28)
-pos1Btn.Position = UDim2.new(0, 10, 0, 60)
+pos1Btn.Size = UDim2.new(0, 110, 0, 26)
+pos1Btn.Position = UDim2.new(0, 10, 0, 58)
 pos1Btn.BackgroundColor3 = Color3.fromRGB(50, 150, 255)
 pos1Btn.Text = "POS1: Not set"
 pos1Btn.Font = Enum.Font.GothamBold
-pos1Btn.TextSize = 10
+pos1Btn.TextSize = 9
 pos1Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
 pos1Btn.BorderSizePixel = 0
 Instance.new("UICorner", pos1Btn).CornerRadius = UDim.new(0, 5)
 
 local pos2Btn = Instance.new("TextButton", frame)
-pos2Btn.Size = UDim2.new(0, 110, 0, 28)
-pos2Btn.Position = UDim2.new(0, 130, 0, 60)
+pos2Btn.Size = UDim2.new(0, 110, 0, 26)
+pos2Btn.Position = UDim2.new(0, 130, 0, 58)
 pos2Btn.BackgroundColor3 = Color3.fromRGB(200, 100, 50)
 pos2Btn.Text = "POS2: Not set"
 pos2Btn.Font = Enum.Font.GothamBold
-pos2Btn.TextSize = 10
+pos2Btn.TextSize = 9
 pos2Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
 pos2Btn.BorderSizePixel = 0
 Instance.new("UICorner", pos2Btn).CornerRadius = UDim.new(0, 5)
@@ -127,9 +146,9 @@ Instance.new("UICorner", pos2Btn).CornerRadius = UDim.new(0, 5)
 -- Build Modes
 local modeLabel = Instance.new("TextLabel", frame)
 modeLabel.Size = UDim2.new(1, 0, 0, 16)
-modeLabel.Position = UDim2.new(0, 10, 0, 94)
+modeLabel.Position = UDim2.new(0, 10, 0, 88)
 modeLabel.BackgroundTransparency = 1
-modeLabel.Text = "Mode:"
+modeLabel.Text = "Build Modes:"
 modeLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
 modeLabel.Font = Enum.Font.GothamBold
 modeLabel.TextSize = 10
@@ -143,7 +162,7 @@ local function modeBtn(text, x, yPos, m, w)
     btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
     btn.Text = text
     btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 10
+    btn.TextSize = 9
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.BorderSizePixel = 0
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
@@ -157,21 +176,66 @@ local function modeBtn(text, x, yPos, m, w)
     return btn
 end
 
--- Row 1: Build modes
-local fillModeBtn = modeBtn("Fill", 10, 110, "set")
-modeBtn("Walls", 70, 110, "walls")
-modeBtn("Floor", 130, 110, "floor")
-modeBtn("Line", 190, 110, "line")
+local fillModeBtn = modeBtn("Fill", 10, 106, "set")
+modeBtn("Walls", 70, 106, "walls")
+modeBtn("Floor", 130, 106, "floor")
+modeBtn("Line", 190, 106, "line")
 fillModeBtn.BackgroundColor3 = Color3.fromRGB(100, 180, 100)
 
--- Row 2: Delete modes
-modeBtn("Delete", 10, 140, "delete", 75)
-modeBtn("DelArea", 90, 140, "deletearea", 75)
-modeBtn("Undel", 170, 140, "undelete", 70)
+-- Delete Modes
+local delLabel = Instance.new("TextLabel", frame)
+delLabel.Size = UDim2.new(1, 0, 0, 16)
+delLabel.Position = UDim2.new(0, 10, 0, 134)
+delLabel.BackgroundTransparency = 1
+delLabel.Text = "Delete Modes:"
+delLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+delLabel.Font = Enum.Font.GothamBold
+delLabel.TextSize = 10
+delLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+modeBtn("Delete", 10, 152, "delete", 72)
+modeBtn("DelArea", 90, 152, "deletearea", 72)
+modeBtn("Undel", 170, 152, "undelete", 70)
+
+-- Color buttons
+local colorLabel = Instance.new("TextLabel", frame)
+colorLabel.Size = UDim2.new(1, 0, 0, 16)
+colorLabel.Position = UDim2.new(0, 10, 0, 180)
+colorLabel.BackgroundTransparency = 1
+colorLabel.Text = "Colors:"
+colorLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+colorLabel.Font = Enum.Font.GothamBold
+colorLabel.TextSize = 10
+colorLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local cy = 198
+for i, c in ipairs(COLORS) do
+    local col = math.floor((i - 1) / 7)
+    local row = (i - 1) % 7
+    local btn = Instance.new("TextButton", frame)
+    btn.Size = UDim2.new(0, 30, 0, 22)
+    btn.Position = UDim2.new(0, 10 + row * 33, 0, cy + col * 26)
+    btn.BackgroundColor3 = c.color
+    btn.Text = ""
+    btn.BorderSizePixel = 0
+    btn.AutoButtonColor = false
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
+    btn.MouseButton1Click:Connect(function()
+        blockId = c.id
+        idBox.Text = tostring(c.id)
+    end)
+    btn.MouseEnter:Connect(function()
+        btn.BorderSizePixel = 2
+        btn.BorderColor3 = Color3.fromRGB(255, 255, 255)
+    end)
+    btn.MouseLeave:Connect(function()
+        btn.BorderSizePixel = 0
+    end)
+end
 
 local execBtn = Instance.new("TextButton", frame)
 execBtn.Size = UDim2.new(1, -20, 0, 30)
-execBtn.Position = UDim2.new(0, 10, 0, 170)
+execBtn.Position = UDim2.new(0, 10, 0, 256)
 execBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
 execBtn.Text = "EXECUTE"
 execBtn.Font = Enum.Font.GothamBold
@@ -182,7 +246,7 @@ Instance.new("UICorner", execBtn).CornerRadius = UDim.new(0, 6)
 
 local status = Instance.new("TextLabel", frame)
 status.Size = UDim2.new(1, 0, 0, 14)
-status.Position = UDim2.new(0, 0, 0, 206)
+status.Position = UDim2.new(0, 0, 0, 290)
 status.BackgroundTransparency = 1
 status.Text = "Click POS1/POS2 then click a block"
 status.TextColor3 = Color3.fromRGB(180, 180, 180)
