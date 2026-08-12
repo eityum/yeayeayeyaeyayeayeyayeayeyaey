@@ -1,4 +1,4 @@
--- Mech Controller - Mobile Drag + Move/Turn + Emotes + Straight + Keyboard + Spawner
+-- Mech Controller - Mobile Drag + Move/Turn + Emotes + Straight + Keyboard + Spawner (Fixed v2)
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
@@ -17,6 +17,7 @@ local isRotLeft, isRotRight, walkCycle, isMoving = false, false, 0, false
 local keyboardActive, pointRArm, pointLArm = false, false, false
 local emoteActive, emoteType, emoteTime = false, nil, 0
 local spawnActive, spawnConn = false, nil
+local velocityReset, savedVelocity = false, {}
 
 -- GUI
 local sg = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
@@ -62,11 +63,10 @@ local disBtn = btn("DISASSEMBLE", 85, 33, 75, 26, Color3.fromRGB(255, 80, 80))
 local straightBtn = btn("STRAIGHT", 165, 33, 75, 26, Color3.fromRGB(200, 100, 255))
 
 -- Row 2: Emotes
-local hiBtn = btn("HI", 5, 64, 45, 26, Color3.fromRGB(255, 200, 50)); hiBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
-local danceBtn = btn("DANCE", 55, 64, 50, 26, Color3.fromRGB(255, 100, 255))
-local sitBtn = btn("SIT", 110, 64, 45, 26, Color3.fromRGB(150, 100, 50))
-local offerBtn = btn("OFFER", 160, 64, 50, 26, Color3.fromRGB(255, 150, 100))
-local stopBtn = btn("STOP", 215, 64, 30, 26, Color3.fromRGB(255, 80, 80))
+local hiBtn = btn("HI", 5, 64, 55, 26, Color3.fromRGB(255, 200, 50)); hiBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+local danceBtn = btn("DANCE", 65, 64, 60, 26, Color3.fromRGB(255, 100, 255))
+local sitBtn = btn("SIT", 130, 64, 55, 26, Color3.fromRGB(150, 100, 50))
+local stopBtn = btn("STOP", 190, 64, 55, 26, Color3.fromRGB(255, 80, 80))
 
 -- Row 3: Keyboard
 local kbdBtn = btn("KEYBOARD: OFF", 5, 95, 240, 26, Color3.fromRGB(100, 100, 100))
@@ -132,13 +132,28 @@ straightBtn.MouseButton1Click:Connect(function() if mechActive then mechCFrame =
 hiBtn.MouseButton1Click:Connect(function() if mechActive then emoteActive = true; emoteType = "Hi"; emoteTime = 0 end end)
 danceBtn.MouseButton1Click:Connect(function() if mechActive then emoteActive = true; emoteType = "Dance"; emoteTime = 0 end end)
 sitBtn.MouseButton1Click:Connect(function() if mechActive then emoteActive = true; emoteType = "Sit"; emoteTime = 0 end end)
-offerBtn.MouseButton1Click:Connect(function() if mechActive then emoteActive = true; emoteType = "Offer"; emoteTime = 0 end end)
 stopBtn.MouseButton1Click:Connect(function() emoteActive = false; emoteType = nil end)
 kbdBtn.MouseButton1Click:Connect(function()
 	keyboardActive = not keyboardActive
 	kbdBtn.Text = keyboardActive and "KEYBOARD: ON (WASD/Z/X/QE/RT)" or "KEYBOARD: OFF"
 	kbdBtn.BackgroundColor3 = keyboardActive and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(100, 100, 100)
-	if not keyboardActive then pointRArm = false; pointLArm = false end
+	if not keyboardActive then
+		pointRArm = false; pointLArm = false
+		velocityReset = true
+		if root then
+			table.insert(savedVelocity, {part = root, vel = root.Velocity})
+		end
+		task.delay(2, function()
+			for _, data in pairs(savedVelocity) do
+				if data.part and data.part.Parent then
+					data.part.Velocity = Vector3.zero
+					data.part.RotVelocity = Vector3.zero
+				end
+			end
+			savedVelocity = {}
+			velocityReset = false
+		end)
+	end
 end)
 
 -- Keyboard
@@ -257,19 +272,6 @@ function posMech()
 					elseif t == "la" then local rp = CFrame.Angles(math.rad(90), 0, 0) * (o - lap); b.CFrame = mechCFrame * CFrame.new(lap + rp + Vector3.new(0, -4, 0)) * CFrame.Angles(math.rad(90), 0, 0)
 					elseif t == "ra" then local rp = CFrame.Angles(math.rad(90), 0, 0) * (o - rap); b.CFrame = mechCFrame * CFrame.new(rap + rp + Vector3.new(0, -4, 0)) * CFrame.Angles(math.rad(90), 0, 0)
 					elseif t == "h" then b.CFrame = mechCFrame * CFrame.new(o + Vector3.new(0, -6, 0))
-					else b.CFrame = mechCFrame * CFrame.new(o) end
-				elseif emoteType == "Offer" then
-					local phase = math.min(emoteTime / 5, 1)
-					if t == "ra" then
-						if phase < 0.3 then local p = phase / 0.3; local rp = CFrame.Angles(0, 0, math.rad(120 * p)) * (o - rap); b.CFrame = mechCFrame * CFrame.new(rap + rp) * CFrame.Angles(0, 0, math.rad(120 * p))
-						elseif phase < 0.6 then local p = (phase - 0.3) / 0.3; local rp = CFrame.Angles(0, 0, math.rad(120 - 60 * p)) * (o - rap); b.CFrame = mechCFrame * CFrame.new(rap + rp + Vector3.new(0, -12 * p, 6 * p)) * CFrame.Angles(0, 0, math.rad(120 - 60 * p))
-						else local rp = CFrame.Angles(0, 0, math.rad(60)) * (o - rap); b.CFrame = mechCFrame * CFrame.new(rap + rp + Vector3.new(0, -16, 10)) * CFrame.Angles(0, 0, math.rad(60)) end
-					elseif t == "la" then local rp = CFrame.Angles(math.rad(90), 0, 0) * (o - lap); b.CFrame = mechCFrame * CFrame.new(lap + rp + Vector3.new(0, -4, 0)) * CFrame.Angles(math.rad(90), 0, 0)
-					elseif t == "h" then
-						if phase < 0.3 then b.CFrame = mechCFrame * CFrame.new(o)
-						elseif phase < 0.6 then local p = (phase - 0.3) / 0.3; b.CFrame = mechCFrame * CFrame.new(o + Vector3.new(0, -12 * p, 6 * p))
-						else b.CFrame = mechCFrame * CFrame.new(o + Vector3.new(0, -20, 12)) end
-					elseif t == "t" then b.CFrame = mechCFrame * CFrame.new(o)
 					else b.CFrame = mechCFrame * CFrame.new(o) end
 				else b.CFrame = mechCFrame * CFrame.new(o) end
 			elseif keyboardActive then
