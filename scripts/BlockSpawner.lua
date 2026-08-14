@@ -1,4 +1,4 @@
--- Color Block Spawner - Fast Batch (150 blocks)
+-- Color Block Spawner - Grid Layers Fast
 local player = game:GetService("Players").LocalPlayer
 local WS = game:GetService("Workspace")
 local HttpService = game:GetService("HttpService")
@@ -14,7 +14,7 @@ end
 
 local uuid = "{ea9dfeea-65dd-45d7-8409-52630a73544e}"
 local spawnCount = 0
-local targetCount = 150
+local targetCount = 500
 
 local colors = {
     {name = "Cyan", id = 56452470, color = Color3.fromRGB(0, 255, 255)},
@@ -35,19 +35,12 @@ local colors = {
 }
 
 local spawnActive = false
-local spawnConn = nil
 
-local function spawnBlock(blockId)
-    local x = math.random(0, 8) * 6
-    local z = math.random(0, 8) * 6
-    local cf = LPlate.CFrame * CFrame.new(x, 50, z)
-    local result, conn2
-    conn2 = Active.ChildAdded:Connect(function(child)
-        if child:IsA("Model") then result = child; conn2:Disconnect() end
+local function spawnBlockFast(blockId, worldX, worldY, worldZ)
+    local cf = CFrame.new(worldX, worldY, worldZ)
+    spawn(function()
+        StampAsset:InvokeServer(blockId, cf, uuid, {}, 0)
     end)
-    StampAsset:InvokeServer(blockId, cf, uuid, {}, 0)
-    repeat task.wait() until result
-    spawnCount = spawnCount + 1
 end
 
 -- GUI
@@ -55,8 +48,8 @@ local sg = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 sg.Name = "ColorSpawner"
 
 local frame = Instance.new("Frame", sg)
-frame.Size = UDim2.new(0, 280, 0, 200)
-frame.Position = UDim2.new(0.5, -140, 0.5, -100)
+frame.Size = UDim2.new(0, 280, 0, 250)
+frame.Position = UDim2.new(0.5, -140, 0.5, -125)
 frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 frame.BorderSizePixel = 0
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
@@ -88,16 +81,57 @@ UIS.InputEnded:Connect(function(i)
     if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then drag = false end
 end)
 
+-- Quantity input
+local countLabel = Instance.new("TextLabel", frame)
+countLabel.Size = UDim2.new(0, 70, 0, 20)
+countLabel.Position = UDim2.new(0, 10, 0, 26)
+countLabel.Text = "Amount:"
+countLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+countLabel.BackgroundTransparency = 1
+countLabel.Font = Enum.Font.Gotham
+countLabel.TextSize = 10
+countLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local countBox = Instance.new("TextBox", frame)
+countBox.Size = UDim2.new(0, 70, 0, 22)
+countBox.Position = UDim2.new(0, 80, 0, 25)
+countBox.Text = "500"
+countBox.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+countBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+countBox.Font = Enum.Font.Gotham
+countBox.TextSize = 10
+countBox.BorderSizePixel = 0
+Instance.new("UICorner", countBox).CornerRadius = UDim.new(0, 4)
+
+local applyBtn = Instance.new("TextButton", frame)
+applyBtn.Size = UDim2.new(0, 50, 0, 22)
+applyBtn.Position = UDim2.new(0, 160, 0, 25)
+applyBtn.Text = "SET"
+applyBtn.BackgroundColor3 = Color3.fromRGB(100, 150, 255)
+applyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+applyBtn.Font = Enum.Font.GothamBold
+applyBtn.TextSize = 9
+applyBtn.BorderSizePixel = 0
+Instance.new("UICorner", applyBtn).CornerRadius = UDim.new(0, 4)
+
+applyBtn.MouseButton1Click:Connect(function()
+    local n = tonumber(countBox.Text)
+    if n and n > 0 then
+        targetCount = n
+        statusLabel.Text = "Amount set to " .. n
+    end
+end)
+
 local statusLabel = Instance.new("TextLabel", frame)
 statusLabel.Size = UDim2.new(1, 0, 0, 14)
-statusLabel.Position = UDim2.new(0, 0, 0, 26)
+statusLabel.Position = UDim2.new(0, 0, 0, 50)
 statusLabel.Text = "Ready"
 statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 statusLabel.BackgroundTransparency = 1
 statusLabel.Font = Enum.Font.Gotham
 statusLabel.TextSize = 9
 
-local y = 44
+local y = 68
 for i, c in ipairs(colors) do
     local col = math.floor((i - 1) / 3)
     local row = (i - 1) % 3
@@ -115,16 +149,30 @@ for i, c in ipairs(colors) do
         if spawnActive then return end
         spawnActive = true
         spawnCount = 0
-        local rs = game:GetService("RunService")
-        spawnConn = rs.Heartbeat:Connect(function()
-            if spawnCount >= targetCount then
-                spawnActive = false
-                if spawnConn then spawnConn:Disconnect() end
-                statusLabel.Text = "Done! " .. targetCount .. " blocks"
-                return
-            end
-            spawnBlock(c.id)
-            statusLabel.Text = "Spawning: " .. spawnCount .. "/" .. targetCount
-        end)
+        
+        local gap = 5
+        local cols = 16
+        local rows = 16
+        local perLayer = 256
+        local platePos = LPlate.Position
+        local spawnHeight = 100
+        
+        for i = 1, targetCount do
+            local layer = math.floor((i-1) / perLayer)
+            local posInLayer = (i-1) % perLayer
+            local row = math.floor(posInLayer / cols)
+            local col = posInLayer % cols
+            local startX = -(cols * gap) / 2 + gap/2
+            local startZ = -(rows * gap) / 2 + gap/2
+            local worldX = platePos.X + startX + col * gap
+            local worldY = spawnHeight + layer * gap
+            local worldZ = platePos.Z + startZ + row * gap
+            
+            spawnBlockFast(c.id, worldX, worldY, worldZ)
+            spawnCount = spawnCount + 1
+        end
+        
+        spawnActive = false
+        statusLabel.Text = "Spawned " .. spawnCount .. " blocks"
     end)
 end
