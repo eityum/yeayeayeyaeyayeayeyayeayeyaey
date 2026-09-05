@@ -335,6 +335,7 @@ tabContent["Destructive"] = {
     {name = "🔊 Sound Spammer", callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/eityum/yeayeayeyaeyayeayeyayeayeyaey/refs/heads/main/scripts/Sound.lua"))() end},
     {name = "💀 Void", callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/eityum/yeayeayeyaeyayeayeyayeayeyaey/refs/heads/main/scripts/void.lua"))() end},
     {name = "🔨 OOB Stamper", callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/eityum/yeayeayeyaeyayeayeyayeayeyaey/refs/heads/main/scripts/OOBStamper.lua"))() end},
+    {name = "🔫 Gun", callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/eityum/yeayeayeyaeyayeayeyayeayeyaey/refs/heads/main/scripts/Gun.lua"))() end},
 }
 
 tabContent["Tools"] = {
@@ -352,6 +353,7 @@ tabContent["Unanchored"] = {
     {name = "🌪️ Tornado", callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/eityum/yeayeayeyaeyayeayeyayeayeyaey/refs/heads/main/scripts/Tornado.lua"))() end},
     {name = "🔮 Telekinesis", callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/eityum/yeayeayeyaeyayeayeyayeayeyaey/refs/heads/main/scripts/TelekinesisByEityum.lua"))() end},
     {name = "📝 Text Blocks", callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/eityum/yeayeayeyaeyayeayeyayeayeyaey/refs/heads/main/scripts/TextManipulate.lua"))() end},
+    {name = "🍩 NeedOh", callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/eityum/yeayeayeyaeyayeayeyayeayeyaey/refs/heads/main/scripts/NeedOh.lua"))() end},
 }
 
 -- Load initial tab
