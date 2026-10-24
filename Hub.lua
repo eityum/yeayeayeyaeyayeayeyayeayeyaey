@@ -365,6 +365,7 @@ tabContent["Destructive"] = {
 }
 
 tabContent["Tools"] = {
+	{name = "📋 Base Copier", callback = function() runScript("Base Copier", "https://raw.githubusercontent.com/eityum/yeayeayeyaeyayeayeyayeayeyaey/refs/heads/main/scripts/BaseSaver%26Copier.txt") end},
 	{name = "♾️ Infinite Yield", callback = function() runScript("Infinite Yield", "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source") end},
 	{name = "😊 SmileyHub", callback = function() runScript("SmileyHub", "https://raw.githubusercontent.com/eityum/yeayeayeyaeyayeayeyayeayeyaey/refs/heads/main/scripts/SmileyHub.lua") end},
 	{name = "🪄 WorldEdit Wand", callback = function() runScript("WorldEdit Wand", "https://raw.githubusercontent.com/eityum/yeayeayeyaeyayeayeyayeayeyaey/refs/heads/main/scripts/Wand.lua") end},
