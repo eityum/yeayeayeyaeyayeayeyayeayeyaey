@@ -371,22 +371,38 @@ loadBtn.MouseButton1Click:Connect(function()
 
     local plateCF = LPlate.CFrame
     local currentSpawnLoc = spawnLocation
-
-    coroutine.wrap(function()
-        for i, data in ipairs(blueprintData) do
-            local savedCF = CFrame.new(unpack(data.CFrame))
-            local worldCF = plateCF * savedCF
-            
-            pcall(function()
-                StampAsset:InvokeServer(data.Id, worldCF, uuid, {currentSpawnLoc}, data.Rot or 0)
-            end)
-            
-            if i % 50 == 0 then
-                task.wait()
+    
+    task.spawn(function()
+        local batchSize = 50
+        local count = 0
+        
+        for i = 1, total, batchSize do
+            -- Fire a batch of blocks at the exact same time
+            for j = i, math.min(i + batchSize - 1, total) do
+                local data = blueprintData[j]
+                local savedCF = CFrame.new(unpack(data.CFrame))
+                local worldCF = plateCF * savedCF
+                
+                task.spawn(function()
+                    pcall(function()
+                        StampAsset:InvokeServer(data.Id, worldCF, uuid, {currentSpawnLoc}, data.Rot or 0)
+                    end)
+                end)
+                count = count + 1
             end
+            
+            -- Wait 0.03 seconds to let the server process the batch
+            task.wait(0.03)
+            
+            -- Update progress
+            task.defer(function()
+                status.Text = "Loading... " .. count .. " / " .. total
+            end)
         end
 
-        status.Text = "Finished loading " .. total .. " blocks."
-        status.TextColor3 = Color3.fromRGB(100, 255, 100)
-    end)()
+        task.defer(function()
+            status.Text = "Finished loading " .. total .. " blocks."
+            status.TextColor3 = Color3.fromRGB(100, 255, 100)
+        end)
+    end)
 end)
