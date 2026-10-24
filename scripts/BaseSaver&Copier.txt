@@ -66,7 +66,7 @@ sg.Name = "BlueprintManager"
 sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local frame = Instance.new("Frame", sg)
-frame.Size = UDim2.new(0, 300, 0, 440)
+frame.Size = UDim2.new(0, 300, 0, 460) -- Made slightly taller for the checkbox
 frame.Position = UDim2.new(0, 10, 0, 10)
 frame.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
 frame.BorderSizePixel = 0
@@ -186,6 +186,30 @@ Instance.new("UICorner", scroll).CornerRadius = UDim.new(0, 4)
 local listLayout = Instance.new("UIListLayout", scroll)
 listLayout.SortOrder = Enum.SortOrder.LayoutOrder
 listLayout.Padding = UDim.new(0, 4)
+
+-- Flip Checkbox
+local flipToggle = Instance.new("TextButton", frame)
+flipToggle.Size = UDim2.new(1, -20, 0, 20)
+flipToggle.Position = UDim2.new(0, 10, 1, -100)
+flipToggle.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+flipToggle.Text = "[ ] Flip Base (Left/Right)"
+flipToggle.TextColor3 = Color3.fromRGB(200, 200, 200)
+flipToggle.Font = Enum.Font.Gotham
+flipToggle.TextSize = 11
+flipToggle.BorderSizePixel = 0
+Instance.new("UICorner", flipToggle).CornerRadius = UDim.new(0, 4)
+
+local isFlipped = false
+flipToggle.MouseButton1Click:Connect(function()
+    isFlipped = not isFlipped
+    if isFlipped then
+        flipToggle.Text = "[X] Flip Base (Left/Right)"
+        flipToggle.TextColor3 = Color3.fromRGB(100, 255, 100)
+    else
+        flipToggle.Text = "[ ] Flip Base (Left/Right)"
+        flipToggle.TextColor3 = Color3.fromRGB(200, 200, 200)
+    end
+end)
 
 -- Bottom Buttons
 local loadBtn = Instance.new("TextButton", frame)
@@ -395,6 +419,13 @@ loadBtn.MouseButton1Click:Connect(function()
             for j = i, math.min(i + batchSize - 1, total) do
                 local data = blueprintData[j]
                 local savedCF = CFrame.new(unpack(data.CFrame))
+                
+                -- THE FLIP LOGIC
+                if isFlipped then
+                    -- Mirror X axis (position and rotation)
+                    savedCF = savedCF * CFrame.new(0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0, 1)
+                end
+                
                 local worldCF = plateCF * savedCF
                 
                 task.spawn(function()
