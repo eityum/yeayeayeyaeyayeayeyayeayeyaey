@@ -181,6 +181,7 @@ scroll.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 scroll.BorderSizePixel = 0
 scroll.ScrollBarThickness = 4
 scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y -- FIX: Makes scroll auto-size for infinite blueprints
 Instance.new("UICorner", scroll).CornerRadius = UDim.new(0, 4)
 
 local listLayout = Instance.new("UIListLayout", scroll)
@@ -265,7 +266,6 @@ local function refreshList()
         end
     end
 
-    local ySize = 0
     for name, data in pairs(allBlueprints) do
         local btn = Instance.new("TextButton", scroll)
         btn.Size = UDim2.new(1, -4, 0, 24)
@@ -283,10 +283,7 @@ local function refreshList()
             status.Text = "Selected: " .. name
             refreshList()
         end)
-        
-        ySize = ySize + 28
     end
-    scroll.CanvasSize = UDim2.new(0, 0, 0, ySize)
 end
 
 refreshList()
@@ -433,7 +430,7 @@ loadBtn.MouseButton1Click:Connect(function()
     
     task.spawn(function()
         if isSlowLoad then
-            -- SLOW LOAD: task.spawn per block, but 0.1s wait between each
+            -- SLOW LOAD
             for i = 1, total do
                 local data = blueprintData[i]
                 local savedCF = CFrame.new(unpack(data.CFrame))
@@ -459,7 +456,7 @@ loadBtn.MouseButton1Click:Connect(function()
                 task.wait(0.1)
             end
         else
-            -- FAST LOAD: Batched task.spawn (50 per 0.03s)
+            -- FAST LOAD
             local batchSize = 50
             local count = 0
             
