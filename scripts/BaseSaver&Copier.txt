@@ -1,0 +1,392 @@
+local UIS = game:GetService("UserInputService")
+local WS = game:GetService("Workspace")
+local PS = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local HttpService = game:GetService("HttpService")
+
+local StampAsset = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("StampAsset")
+
+local player = PS.LocalPlayer
+local uuid = "{c832eeb8-caaa-4b3c-ac7e-741e0d3875b1}"
+
+local LPlate, Active, spawnLocation
+local function findPlate()
+    LPlate, Active, spawnLocation = nil, nil, nil
+    for i, v in pairs(WS.Plates:GetChildren()) do
+        local o = v:FindFirstChild("Owner")
+        if o and o.Value == player then
+            LPlate = v:FindFirstChild("Plate")
+            Active = v:FindFirstChild("ActiveParts")
+            spawnLocation = v:FindFirstChild("SpawnLocation")
+            break
+        end
+    end
+end
+findPlate()
+
+-- File Management
+local FOLDER_NAME = "Blueprints_lua"
+local FILE_NAME = FOLDER_NAME .. "/blueprints.json"
+local allBlueprints = {}
+local selectedSaveName = nil
+
+local function loadSavesFromFile()
+    if isfolder and not isfolder(FOLDER_NAME) then
+        makefolder(FOLDER_NAME)
+    end
+    if isfile and readfile and isfile(FILE_NAME) then
+        local success, data = pcall(function()
+            return HttpService:JSONDecode(readfile(FILE_NAME))
+        end)
+        if success and type(data) == "table" then
+            allBlueprints = data
+        end
+    end
+end
+
+local function saveSavesToFile()
+    if writefile then
+        task.spawn(function()
+            local success, data = pcall(function()
+                return HttpService:JSONEncode(allBlueprints)
+            end)
+            if success then
+                writefile(FILE_NAME, data)
+            end
+        end)
+    end
+end
+
+loadSavesFromFile()
+
+-- GUI Setup
+local sg = Instance.new("ScreenGui", CoreGui)
+sg.Name = "BlueprintManager"
+sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+local frame = Instance.new("Frame", sg)
+frame.Size = UDim2.new(0, 300, 0, 440)
+frame.Position = UDim2.new(0, 10, 0, 10)
+frame.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+frame.BorderSizePixel = 0
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
+
+local topBar = Instance.new("Frame", frame)
+topBar.Size = UDim2.new(1, 0, 0, 26)
+topBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+topBar.BorderSizePixel = 0
+Instance.new("UICorner", topBar).CornerRadius = UDim.new(0, 8)
+
+local title = Instance.new("TextButton", topBar)
+title.Size = UDim2.new(1, 0, 1, 0)
+title.Text = "📋 BLUEPRINT MANAGER"
+title.TextColor3 = Color3.fromRGB(255, 200, 50)
+title.BackgroundTransparency = 1
+title.Font = Enum.Font.GothamBold
+title.TextSize = 10
+title.AutoButtonColor = false
+
+-- Dragging
+local drag, dStart, sPos = false, nil, nil
+title.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 then
+        drag = true; dStart = i.Position; sPos = frame.Position
+    end
+end)
+UIS.InputChanged:Connect(function(i)
+    if not drag then return end
+    if i.UserInputType == Enum.UserInputType.MouseMovement then
+        local d = i.Position - dStart
+        frame.Position = UDim2.new(sPos.X.Scale, sPos.X.Offset + d.X, sPos.Y.Scale, sPos.Y.Offset + d.Y)
+    end
+end)
+UIS.InputEnded:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 then drag = false end
+end)
+
+-- Inputs
+local nameBox = Instance.new("TextBox", frame)
+nameBox.Size = UDim2.new(1, -20, 0, 26)
+nameBox.Position = UDim2.new(0, 10, 0, 35)
+nameBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+nameBox.PlaceholderText = "Enter save name..."
+nameBox.Text = ""
+nameBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+nameBox.Font = Enum.Font.Gotham
+nameBox.TextSize = 11
+nameBox.BorderSizePixel = 0
+Instance.new("UICorner", nameBox).CornerRadius = UDim.new(0, 4)
+
+local targetBox = Instance.new("TextBox", frame)
+targetBox.Size = UDim2.new(1, -20, 0, 26)
+targetBox.Position = UDim2.new(0, 10, 0, 65)
+targetBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+targetBox.PlaceholderText = "Enter target player name to copy..."
+targetBox.Text = ""
+targetBox.TextColor3 = Color3.fromRGB(255, 100, 100)
+targetBox.Font = Enum.Font.Gotham
+targetBox.TextSize = 11
+targetBox.BorderSizePixel = 0
+Instance.new("UICorner", targetBox).CornerRadius = UDim.new(0, 4)
+
+local saveBtn = Instance.new("TextButton", frame)
+saveBtn.Size = UDim2.new(0, 135, 0, 26)
+saveBtn.Position = UDim2.new(0, 10, 0, 95)
+saveBtn.BackgroundColor3 = Color3.fromRGB(50, 150, 255)
+saveBtn.Text = "SAVE CURRENT"
+saveBtn.Font = Enum.Font.GothamBold
+saveBtn.TextSize = 10
+saveBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+saveBtn.BorderSizePixel = 0
+Instance.new("UICorner", saveBtn).CornerRadius = UDim.new(0, 4)
+
+local copyTargetBtn = Instance.new("TextButton", frame)
+copyTargetBtn.Size = UDim2.new(0, 135, 0, 26)
+copyTargetBtn.Position = UDim2.new(0, 155, 0, 95)
+copyTargetBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 200)
+copyTargetBtn.Text = "COPY TARGET"
+copyTargetBtn.Font = Enum.Font.GothamBold
+copyTargetBtn.TextSize = 10
+copyTargetBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+copyTargetBtn.BorderSizePixel = 0
+Instance.new("UICorner", copyTargetBtn).CornerRadius = UDim.new(0, 4)
+
+local renameBtn = Instance.new("TextButton", frame)
+renameBtn.Size = UDim2.new(1, -20, 0, 26)
+renameBtn.Position = UDim2.new(0, 10, 0, 125)
+renameBtn.BackgroundColor3 = Color3.fromRGB(200, 150, 50)
+renameBtn.Text = "RENAME SELECTED"
+renameBtn.Font = Enum.Font.GothamBold
+renameBtn.TextSize = 10
+renameBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+renameBtn.BorderSizePixel = 0
+Instance.new("UICorner", renameBtn).CornerRadius = UDim.new(0, 4)
+
+local status = Instance.new("TextLabel", frame)
+status.Size = UDim2.new(1, -20, 0, 14)
+status.Position = UDim2.new(0, 10, 0, 155)
+status.Text = "Select a blueprint from the list."
+status.TextColor3 = Color3.fromRGB(180, 180, 180)
+status.Font = Enum.Font.Gotham
+status.TextSize = 9
+status.BackgroundTransparency = 1
+status.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Save List
+local scroll = Instance.new("ScrollingFrame", frame)
+scroll.Size = UDim2.new(1, -20, 0, 170)
+scroll.Position = UDim2.new(0, 10, 0, 175)
+scroll.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+scroll.BorderSizePixel = 0
+scroll.ScrollBarThickness = 4
+scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+Instance.new("UICorner", scroll).CornerRadius = UDim.new(0, 4)
+
+local listLayout = Instance.new("UIListLayout", scroll)
+listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+listLayout.Padding = UDim.new(0, 4)
+
+-- Bottom Buttons
+local loadBtn = Instance.new("TextButton", frame)
+loadBtn.Size = UDim2.new(1, -20, 0, 30)
+loadBtn.Position = UDim2.new(0, 10, 1, -70)
+loadBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+loadBtn.Text = "LOAD SELECTED"
+loadBtn.Font = Enum.Font.GothamBold
+loadBtn.TextSize = 11
+loadBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+loadBtn.BorderSizePixel = 0
+Instance.new("UICorner", loadBtn).CornerRadius = UDim.new(0, 4)
+
+local deleteBtn = Instance.new("TextButton", frame)
+deleteBtn.Size = UDim2.new(1, -20, 0, 20)
+deleteBtn.Position = UDim2.new(0, 10, 1, -30)
+deleteBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+deleteBtn.Text = "DELETE SELECTED"
+deleteBtn.Font = Enum.Font.GothamBold
+deleteBtn.TextSize = 10
+deleteBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+deleteBtn.BorderSizePixel = 0
+Instance.new("UICorner", deleteBtn).CornerRadius = UDim.new(0, 4)
+
+-- Refresh List Function
+local function refreshList()
+    for _, child in ipairs(scroll:GetChildren()) do
+        if child:IsA("TextButton") then
+            child:Destroy()
+        end
+    end
+
+    local ySize = 0
+    for name, data in pairs(allBlueprints) do
+        local btn = Instance.new("TextButton", scroll)
+        btn.Size = UDim2.new(1, -4, 0, 24)
+        btn.BackgroundColor3 = (name == selectedSaveName) and Color3.fromRGB(100, 150, 255) or Color3.fromRGB(40, 40, 40)
+        btn.Text = name .. " (" .. #data .. " blocks)"
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btn.Font = Enum.Font.Gotham
+        btn.TextSize = 10
+        btn.BorderSizePixel = 0
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
+        
+        btn.MouseButton1Click:Connect(function()
+            selectedSaveName = name
+            nameBox.Text = name
+            status.Text = "Selected: " .. name
+            refreshList()
+        end)
+        
+        ySize = ySize + 28
+    end
+    scroll.CanvasSize = UDim2.new(0, 0, 0, ySize)
+end
+
+refreshList()
+
+-- Save/Copy Logic
+local function extractAndSave(targetPlateName, saveName)
+    local targetPlateModel = WS.Plates:FindFirstChild(targetPlateName)
+    if not targetPlateModel then
+        status.Text = "Error: Could not find " .. targetPlateName
+        return
+    end
+
+    local targetLPlate = targetPlateModel:FindFirstChild("Plate")
+    local targetActive = targetPlateModel:FindFirstChild("ActiveParts")
+    
+    if not targetLPlate or not targetActive then
+        status.Text = "Error: Missing plate parts."
+        return
+    end
+
+    status.Text = "Copying blocks..."
+    status.TextColor3 = Color3.fromRGB(255, 200, 50)
+    
+    local plateCF = targetLPlate.CFrame
+    
+    task.spawn(function()
+        local newBlueprint = {}
+        local count = 0
+
+        for _, block in pairs(targetActive:GetChildren()) do
+            if block:IsA("Model") and block.PrimaryPart then
+                local idObj = block:FindFirstChild("AssetId")
+                local rotObj = block:FindFirstChild("NumRotations")
+                
+                if idObj then
+                    local relativeCF = plateCF:ToObjectSpace(block.PrimaryPart.CFrame)
+                    table.insert(newBlueprint, {
+                        Id = idObj.Value,
+                        CFrame = {relativeCF:GetComponents()},
+                        Rot = rotObj and rotObj.Value or 0
+                    })
+                    count = count + 1
+                end
+            end
+        end
+
+        allBlueprints[saveName] = newBlueprint
+        selectedSaveName = saveName
+        
+        saveSavesToFile()
+        
+        task.defer(function()
+            refreshList()
+            status.Text = "Copied " .. count .. " blocks from " .. targetPlateName
+            status.TextColor3 = Color3.fromRGB(100, 255, 100)
+        end)
+    end)
+end
+
+saveBtn.MouseButton1Click:Connect(function()
+    local name = nameBox.Text
+    if name == "" then status.Text = "Error: Enter a name." return end
+    findPlate()
+    if not LPlate or not Active then status.Text = "Error: Plate not found." return end
+    extractAndSave("plot_" .. (player:GetAttribute("PlotNumber") or 1), name)
+end)
+
+copyTargetBtn.MouseButton1Click:Connect(function()
+    local targetName = targetBox.Text
+    if targetName == "" then status.Text = "Error: Enter target name." return end
+    local saveName = nameBox.Text
+    if saveName == "" then saveName = targetName .. "'s Base" end
+
+    -- Manual search to bypass the PlotNumber attribute bug
+    local foundPlateName = nil
+    for _, plate in ipairs(WS.Plates:GetChildren()) do
+        local owner = plate:FindFirstChild("Owner")
+        if owner and owner.Value and owner.Value.Name == targetName then
+            foundPlateName = plate.Name
+            break
+        end
+    end
+
+    if foundPlateName then
+        extractAndSave(foundPlateName, saveName)
+    else
+        status.Text = "Error: Could not find a plate owned by " .. targetName
+        status.TextColor3 = Color3.fromRGB(255, 100, 100)
+    end
+end)
+
+renameBtn.MouseButton1Click:Connect(function()
+    local newName = nameBox.Text
+    if not selectedSaveName then status.Text = "Error: No save selected." return end
+    if newName == "" or newName == selectedSaveName then return end
+    allBlueprints[newName] = allBlueprints[selectedSaveName]
+    allBlueprints[selectedSaveName] = nil
+    selectedSaveName = newName
+    saveSavesToFile()
+    refreshList()
+    status.Text = "Renamed to '" .. newName .. "'."
+    status.TextColor3 = Color3.fromRGB(100, 255, 100)
+end)
+
+deleteBtn.MouseButton1Click:Connect(function()
+    if not selectedSaveName then status.Text = "Error: No save selected." return end
+    allBlueprints[selectedSaveName] = nil
+    selectedSaveName = nil
+    saveSavesToFile()
+    refreshList()
+    nameBox.Text = ""
+    status.Text = "Save deleted."
+    status.TextColor3 = Color3.fromRGB(255, 100, 100)
+end)
+
+loadBtn.MouseButton1Click:Connect(function()
+    if not selectedSaveName or not allBlueprints[selectedSaveName] then
+        status.Text = "Error: No save selected."
+        return
+    end
+    findPlate()
+    if not LPlate or not Active then status.Text = "Error: Plate not found." return end
+
+    local blueprintData = allBlueprints[selectedSaveName]
+    local total = #blueprintData
+    
+    status.Text = "Loading " .. total .. " blocks..."
+    status.TextColor3 = Color3.fromRGB(255, 200, 50)
+
+    local plateCF = LPlate.CFrame
+    local currentSpawnLoc = spawnLocation
+
+    coroutine.wrap(function()
+        for i, data in ipairs(blueprintData) do
+            local savedCF = CFrame.new(unpack(data.CFrame))
+            local worldCF = plateCF * savedCF
+            
+            pcall(function()
+                StampAsset:InvokeServer(data.Id, worldCF, uuid, {currentSpawnLoc}, data.Rot or 0)
+            end)
+            
+            if i % 50 == 0 then
+                task.wait()
+            end
+        end
+
+        status.Text = "Finished loading " .. total .. " blocks."
+        status.TextColor3 = Color3.fromRGB(100, 255, 100)
+    end)()
+end)
