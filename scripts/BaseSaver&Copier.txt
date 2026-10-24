@@ -302,9 +302,23 @@ end
 saveBtn.MouseButton1Click:Connect(function()
     local name = nameBox.Text
     if name == "" then status.Text = "Error: Enter a name." return end
-    findPlate()
-    if not LPlate or not Active then status.Text = "Error: Plate not found." return end
-    extractAndSave("plot_" .. (player:GetAttribute("PlotNumber") or 1), name)
+
+    -- Manual search for your own plate
+    local foundPlateName = nil
+    for _, plate in ipairs(WS.Plates:GetChildren()) do
+        local owner = plate:FindFirstChild("Owner")
+        if owner and owner.Value == player then
+            foundPlateName = plate.Name
+            break
+        end
+    end
+
+    if foundPlateName then
+        extractAndSave(foundPlateName, name)
+    else
+        status.Text = "Error: Could not find your own plate."
+        status.TextColor3 = Color3.fromRGB(255, 100, 100)
+    end
 end)
 
 copyTargetBtn.MouseButton1Click:Connect(function()
